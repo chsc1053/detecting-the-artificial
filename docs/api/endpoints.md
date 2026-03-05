@@ -30,9 +30,26 @@
 
 ---
 
+### GET /studies
+
+**Description:** List studies available to participants. Placeholder: returns empty array until database is connected.
+
+**Authentication:** None.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": []
+}
+```
+
+---
+
 ## Planned Endpoints
 
-- **Studies**: list/read studies (public or by ID for participants).
+- **Studies**: get single study by ID; add CRUD for experimenters.
 - **Stimuli**: list stimuli for a study; media URLs (e.g. pre-signed).
 - **Responses**: `POST /api/responses` — submit participant response (see AGENTS.md for request/response example).
 - **Admin**: study CRUD, stimulus upload, data export (authenticated).

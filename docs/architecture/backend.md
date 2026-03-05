@@ -10,9 +10,9 @@ Node.js + Express REST API in the `backend/` directory. Initialized with `npm in
 
 ## Current Structure
 
-- **Entry**: `backend/index.js` — creates Express app, mounts routes, starts server.
-- **Implemented**: `GET /health` — liveness/readiness.
-- **Planned**: studies, stimuli, responses, admin/auth, export.
+- **Entry**: `backend/index.js` — creates Express app, mounts route modules, starts server.
+- **Routes**: `routes/health.js` (GET /health), `routes/studies.js` (GET /studies, placeholder).
+- **Planned**: DB-backed studies, stimuli, responses, admin/auth, export.
 
 ## Conventions
 
