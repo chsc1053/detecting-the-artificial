@@ -11,8 +11,8 @@ React (Vite) app in the `frontend/` directory. Created with `npm create vite@lat
 ## Current Structure
 
 - **Entry**: `index.html` → `src/main.jsx` mounts `App.jsx`.
-- **Root component**: `src/App.jsx` — placeholder; participant and experimenter flows to be added (or via routing).
-- **Config**: `vite.config.js`, `eslint.config.js`.
+- **Root component**: `src/App.jsx` — placeholder; fetches `/api/health` to show backend status in dev.
+- **Config**: `vite.config.js` — dev server proxies `/api` to the backend (see [local-setup](../deployment/local-setup.md)); `eslint.config.js`.
 
 ## Planned
 
