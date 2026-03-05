@@ -27,7 +27,10 @@ Never commit `.env` or real secrets; use `.env.example` as a template.
 
 ## Frontend
 
-(To be added when the React app exists.)
+1. From repo root: `cd frontend`
+2. Install: `npm install`
+3. Run: `npm run dev` — dev server (default http://localhost:5173).
+4. Build: `npm run build`; preview: `npm run preview`.
 
 ## Related
 

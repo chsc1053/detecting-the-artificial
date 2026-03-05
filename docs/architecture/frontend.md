@@ -1,13 +1,20 @@
 # Frontend Architecture
 
-(To be filled as the React/Vite app is built.)
+React (Vite) app in the `frontend/` directory. Created with `npm create vite@latest frontend -- --template react`.
 
 ## Stack
 
-- React with Vite.
+- React 19 + Vite 7.
 - Functional components and hooks; no class components.
+- ESLint configured.
 
-## Planned Structure
+## Current Structure
+
+- **Entry**: `index.html` → `src/main.jsx` mounts `App.jsx`.
+- **Root component**: `src/App.jsx` — placeholder; participant and experimenter flows to be added (or via routing).
+- **Config**: `vite.config.js`, `eslint.config.js`.
+
+## Planned
 
 - Participant flow: study entry, task presentation (forced-choice and single-item), response capture, demographics, results summary.
 - Experimenter interface: study configuration, stimulus upload, response export and analytics.
