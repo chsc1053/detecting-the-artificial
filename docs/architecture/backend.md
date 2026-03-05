@@ -1,16 +1,21 @@
 # Backend Architecture
 
-(To be filled as the Node.js/Express API is built.)
+Node.js + Express REST API in the `backend/` directory. Initialized with `npm init -y`; dependencies added via `package.json` and `npm install`.
 
 ## Stack
 
 - Node.js + Express.
 - REST API; consistent response shape: `{ success, data, error }`.
-- Environment-based config; secrets via `.env` (never committed).
+- Environment-based config; secrets via `.env` (never committed). See `backend/.env.example`.
 
-## Planned Structure
+## Current Structure
 
-- Routes: health, studies, stimuli, responses, admin/auth, export.
+- **Entry**: `backend/index.js` — creates Express app, mounts routes, starts server.
+- **Implemented**: `GET /health` — liveness/readiness.
+- **Planned**: studies, stimuli, responses, admin/auth, export.
+
+## Conventions
+
 - Validation and sanitization on all inputs; parameterized DB queries; CORS and rate limiting as needed.
 - S3 access via pre-signed URLs for secure media delivery.
 
