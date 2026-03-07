@@ -4,9 +4,9 @@
 
 ## Scope
 
-- Experimenter export of anonymized response data (e.g. CSV/JSON) for a study.
+- From the **admin panel** (auth-protected): export anonymized response data (e.g. CSV/JSON) for a study.
 - Including accuracy, confidence, explanations, and demographics for statistical analysis.
-- Access control: export only for authenticated experimenters with permission for the study.
+- Access control: export only for authenticated experimenter (admin) users.
 
 ## Related
 

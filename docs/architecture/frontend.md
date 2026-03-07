@@ -16,8 +16,8 @@ React (Vite) app in the `frontend/` directory. Created with `npm create vite@lat
 
 ## Planned
 
-- Participant flow: study entry, task presentation (forced-choice and single-item), response capture, demographics, results summary.
-- Experimenter interface: study configuration, stimulus upload, response export and analytics.
+- **Participant flow**: study entry, task presentation (forced-choice and/or single-item per trial), response capture, demographics, results summary.
+- **Admin panel** (single, auth-protected): study and trial creation, stimulus upload, run studies, **analytics section** with automated analytics from stored data, and data export.
 - State management: local state where possible; lift state when shared across routes or components.
 
 ## Related

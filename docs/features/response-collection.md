@@ -4,8 +4,9 @@
 
 ## Scope
 
-- Capturing detection choice (human vs AI), confidence rating (e.g. 1–5), and optional open-ended explanation.
-- Collecting demographics (age, location, education, AI literacy) where configured.
+- Ask for which is AI-generated: forced-choice = “Which one is AI-generated?”; single-item = “Is this AI-generated?”. Stored as `choice_label` (`human` or `ai`) per [database schema](../architecture/database.md).
+- Capturing confidence rating (1–5) and optional open-ended explanation.
+- Collecting demographics (age, location, education, AI literacy).
 - Storing structured, research-grade data for analysis; linking responses to stimuli and studies.
 
 ## Related

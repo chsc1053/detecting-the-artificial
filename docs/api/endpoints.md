@@ -49,10 +49,10 @@
 
 ## Planned Endpoints
 
-- **Studies**: get single study by ID; add CRUD for experimenters.
-- **Stimuli**: list stimuli for a study; media URLs (e.g. pre-signed).
+- **Studies**: get single study by ID; CRUD and trial management from admin panel (authenticated).
+- **Stimuli**: list stimuli for a study; media URLs (e.g. pre-signed); upload from admin panel (authenticated).
 - **Responses**: `POST /api/responses` — submit participant response (see AGENTS.md for request/response example).
-- **Admin**: study CRUD, stimulus upload, data export (authenticated).
+- **Admin panel** (all authenticated): study/trial CRUD, stimulus upload, data export, analytics (automated from stored data).
 
 ## Related
 
