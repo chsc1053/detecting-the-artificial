@@ -6,12 +6,14 @@
  * Related: docs/architecture/backend.md, docs/api/endpoints.md
  */
 
+require('dotenv').config();
+
 const express = require('express');
 const healthRouter = require('./routes/health');
 const studiesRouter = require('./routes/studies');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 app.use(express.json());
 
