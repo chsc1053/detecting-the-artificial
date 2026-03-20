@@ -32,7 +32,7 @@
 
 ### GET /studies
 
-**Description:** List studies available to participants. Placeholder: returns empty array until database is connected.
+**Description:** List studies available to participants from PostgreSQL.
 
 **Authentication:** None.
 
@@ -41,7 +41,16 @@
 ```json
 {
   "success": true,
-  "data": []
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Pilot Mixed Modality Study",
+      "description": "Initial pilot with mixed forced-choice and single-item trials.",
+      "is_active": true,
+      "created_at": "2026-03-04T12:00:00.000Z",
+      "updated_at": "2026-03-04T12:00:00.000Z"
+    }
+  ]
 }
 ```
 

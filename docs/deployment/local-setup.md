@@ -4,23 +4,35 @@
 
 - Node.js 18+
 - npm (or pnpm)
+- PostgreSQL (local installation or local Docker container)
 
-(PostgreSQL and S3 come later.)
+(S3 comes later.)
 
 ## Backend
 
 1. From repo root: `cd backend`
 2. Install dependencies: `npm install`
-3. Optional: copy `backend/.env.example` to `backend/.env` and set `PORT` if needed (default 3000).
-4. Run: `npm run dev` (with `--watch`) or `npm start`.
-5. Check: `curl http://localhost:3000/health` → `{ "success": true, "data": { "status": "ok", ... } }`.
+3. Create local DB once (example): `createdb detecting_artificial_dev`.
+4. Copy `backend/.env.example` to `backend/.env`.
+5. Set `DATABASE_URL` in `backend/.env` (required), and optionally set `PORT` (default 3000).
+6. Run migrations to create schema: `npm run migrate:up`.
+7. (Optional verify) List tables: `psql "$DATABASE_URL" -c "\dt"`.
+8. Run API: `npm run dev` (with `--watch`) or `npm start`.
+9. Check health: `curl http://localhost:3000/health` → `{ "success": true, "data": { "status": "ok", ... } }`.
+10. Check DB-backed studies endpoint: `curl http://localhost:3000/studies`.
+
+### Migration workflow (backend)
+
+- Create migration file: `npm run migrate:create -- migration_name`
+- Apply pending migrations: `npm run migrate:up`
+- Roll back latest migration: `npm run migrate:down`
 
 ### Environment variables (backend)
 
 | Variable   | Purpose              | Required now |
 |-----------|----------------------|--------------|
 | `PORT`    | Server port          | No (default 3000) |
-| `DATABASE_URL` | PostgreSQL URL  | Later |
+| `DATABASE_URL` | PostgreSQL connection string | Yes |
 | `AWS_*`, `S3_BUCKET` | S3/media | Later |
 
 Never commit `.env` or real secrets; use `.env.example` as a template.
@@ -38,3 +50,4 @@ Never commit `.env` or real secrets; use `.env.example` as a template.
 
 - [AWS deployment](aws-deployment.md)
 - [CI/CD](cicd.md)
+- [Database migrations](database-migrations.md)

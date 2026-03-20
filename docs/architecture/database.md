@@ -8,6 +8,18 @@ Relational schema in PostgreSQL to support multimodal human–AI detection studi
 - All core tables: `id` (UUID primary key), `created_at`, `updated_at` timestamps.
 - Use parameterized queries / query builder or ORM; indexes on frequently queried columns; foreign keys for referential integrity.
 
+## Schema Management and Creation
+
+- Migration tool: `node-pg-migrate` (configured in `backend/package.json`).
+- Migration files live in `backend/migrations/`.
+- Initial schema migration: `backend/migrations/1774035560378_init-schema.js`.
+- Local database connection comes from `DATABASE_URL` in `backend/.env`.
+- Apply schema changes with:
+  - `npm run migrate:up` (apply pending migrations)
+  - `npm run migrate:down` (roll back latest migration)
+  - `npm run migrate:create -- migration_name` (create a new migration file)
+- Applied migrations are tracked in PostgreSQL table `pgmigrations`.
+
 ## Core Tables
 
 ### `studies`
