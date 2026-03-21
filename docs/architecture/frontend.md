@@ -11,7 +11,11 @@ React (Vite) app in the `frontend/` directory. Created with `npm create vite@lat
 ## Current Structure
 
 - **Entry**: `index.html` → `src/main.jsx` mounts `App.jsx`.
-- **Root component**: `src/App.jsx` — placeholder; fetches `/api/health` to show backend status in dev.
+- **Routing**: `src/main.jsx` wraps app with `BrowserRouter`.
+- **Root component**: `src/App.jsx` now includes:
+  - participant landing view (`/`) with backend health status
+  - admin login page (`/admin/login`)
+  - protected admin shell (`/admin`) that validates `Bearer` token via `/api/admin/me`
 - **Config**: `vite.config.js` — dev server proxies `/api` to the backend (see [local-setup](../deployment/local-setup.md)); `eslint.config.js`.
 
 ## Planned

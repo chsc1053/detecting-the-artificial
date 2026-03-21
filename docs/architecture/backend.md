@@ -12,9 +12,10 @@ Node.js + Express REST API in the `backend/` directory. Initialized with `npm in
 
 - **Entry**: `backend/index.js` — creates Express app, mounts route modules, starts server.
 - **DB module**: `src/db.js` — shared PostgreSQL pool using `DATABASE_URL`.
-- **Routes**: `routes/health.js` (GET /health), `routes/studies.js` (GET /studies from PostgreSQL).
+- **Routes**: `routes/health.js` (GET /health), `routes/studies.js` (GET /studies from PostgreSQL), `routes/adminAuth.js` (POST /admin/auth/login, GET /admin/me).
+- **Session storage (MVP)**: `src/adminSessions.js` keeps in-memory bearer token sessions for local development.
 - **Migrations**: `migrations/` managed via `node-pg-migrate` scripts in `backend/package.json`.
-- **Planned**: study/trial CRUD, stimuli and responses endpoints, auth for admin panel, export, analytics endpoints.
+- **Planned**: persist auth sessions (or JWT), study/trial CRUD, stimuli and responses endpoints, export, analytics endpoints.
 
 ## Conventions
 

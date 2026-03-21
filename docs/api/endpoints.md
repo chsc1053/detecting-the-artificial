@@ -56,6 +56,68 @@
 
 ---
 
+### POST /admin/auth/login
+
+**Description:** Authenticate an experimenter/admin user and create a development session token.
+
+**Authentication:** None.
+
+**Request Body:**
+
+```json
+{
+  "email": "researcher@example.com",
+  "password": "plaintext-password"
+}
+```
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "token": "session-token",
+    "experimenter": {
+      "id": "uuid",
+      "email": "researcher@example.com"
+    }
+  }
+}
+```
+
+**Error Responses:**
+- `400`: Missing email/password
+- `401`: Invalid credentials
+- `500`: Login failed
+
+---
+
+### GET /admin/me
+
+**Description:** Validate admin bearer token and return the signed-in experimenter.
+
+**Authentication:** Bearer token (`Authorization: Bearer <token>`).
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "experimenter": {
+      "id": "uuid",
+      "email": "researcher@example.com"
+    }
+  }
+}
+```
+
+**Error Responses:**
+- `401`: Missing/invalid token
+
+---
+
 ## Planned Endpoints
 
 - **Studies**: get single study by ID; CRUD and trial management from admin panel (authenticated).

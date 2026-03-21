@@ -32,3 +32,7 @@ Run these from `backend/`:
 - Migration history is tracked in PostgreSQL table `pgmigrations`.
 - Commit migration files to git so every environment can reproduce the same schema.
 - Never edit an already-applied migration in shared history; create a new migration for incremental changes.
+
+## Related
+
+- [Local setup](local-setup.md) — seeding an admin user (bcrypt hash via **heredoc**).

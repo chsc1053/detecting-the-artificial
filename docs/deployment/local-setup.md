@@ -21,6 +21,54 @@
 9. Check health: `curl http://localhost:3000/health` → `{ "success": true, "data": { "status": "ok", ... } }`.
 10. Check DB-backed studies endpoint: `curl http://localhost:3000/studies`.
 
+### Admin auth setup (local MVP)
+
+Bcrypt hashes look like `$2b$10$...`. In bash, **do not** put that string inside a double-quoted `psql -c "..."` — bash will expand **`$2`**, **`$10`**, etc. and **destroy the hash** (Postgres may store only a few characters; login then always fails).
+
+**Use a quoted heredoc** so the hash is passed through unchanged: `<<'SQL'` (the quotes around `SQL` are required).
+
+1. **Generate a hash** (from `backend/`):
+
+   ```bash
+   node -e "const b=require('bcryptjs'); b.hash('change-me-password', 10).then(h=>console.log('len',h.length, h))"
+   ```
+
+   Expect **len 60** and a prefix **`$2a$`**, **`$2b$`**, or **`$2y$`**.
+
+2. **Point `psql` at your DB** — same URL as `DATABASE_URL` in `backend/.env`. If your shell has no `DATABASE_URL`, export it first or substitute the URL in place of `"$DATABASE_URL"` below.
+
+3. **Insert or upsert the experimenter** — replace the email and paste the **full** hash from step 1 in place of the placeholder:
+
+   ```bash
+   psql "$DATABASE_URL" <<'SQL'
+   INSERT INTO experimenters (email, password_hash)
+   VALUES (
+     'researcher@example.com',
+     'complete_60_character_hash_from_step_1'
+   )
+   ON CONFLICT (email) DO UPDATE
+   SET password_hash = EXCLUDED.password_hash;
+   SQL
+   ```
+
+   `ON CONFLICT` updates `password_hash` if that email already exists (handy after a bad paste).
+
+4. **Verify** (double-quoted `-c` is safe here — no `$` in the SQL):
+
+   ```bash
+   psql "$DATABASE_URL" -c "SELECT length(password_hash), left(password_hash, 7) FROM experimenters WHERE email = 'researcher@example.com';"
+   ```
+
+5. **Login test:**
+
+   ```bash
+   curl -X POST http://localhost:3000/admin/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"researcher@example.com","password":"change-me-password"}'
+   ```
+
+**If login still says “invalid credentials”:** Confirm step 4 shows a ~60-character hash. If not, repeat step 3 with a heredoc only — never a double-quoted `-c` that embeds the bcrypt string.
+
 ### Migration workflow (backend)
 
 - Create migration file: `npm run migrate:create -- migration_name`
@@ -43,6 +91,7 @@ Never commit `.env` or real secrets; use `.env.example` as a template.
 2. Install: `npm install`
 3. Run: `npm run dev` — dev server (default http://localhost:5173).
 4. Build: `npm run build`; preview: `npm run preview`.
+5. Admin routes: open `http://localhost:5173/admin/login` and sign in with your experimenter credentials.
 
 **Dev proxy:** In development, requests from the frontend to `/api/*` are proxied to the backend (see `frontend/vite.config.js`). So the app calls e.g. `fetch('/api/health')`; Vite forwards to `http://localhost:3000/health`. Run the backend while developing the frontend so the "Backend: connected" status shows.
 
