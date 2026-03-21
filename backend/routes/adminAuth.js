@@ -10,15 +10,9 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../src/db');
 const { createSession, getSession } = require('../src/adminSessions');
+const { getBearerToken } = require('../middleware/requireAdminSession');
 
 const router = express.Router();
-
-function getBearerToken(headerValue) {
-  if (!headerValue || !headerValue.startsWith('Bearer ')) {
-    return null;
-  }
-  return headerValue.slice(7);
-}
 
 router.post('/auth/login', async (req, res) => {
   const { email, password } = req.body ?? {};

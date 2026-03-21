@@ -10,6 +10,7 @@
 
 ## Related
 
+- [Admin panel (IA & navigation)](admin-panel.md)
 - [Experiment config](experiment-config.md)
 - [Data export](data-export.md)
 - [Database schema](../architecture/database.md)

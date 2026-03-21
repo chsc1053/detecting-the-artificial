@@ -118,9 +118,48 @@
 
 ---
 
+### POST /admin/studies
+
+**Description:** Create a new study (experimenter only).
+
+**Authentication:** Bearer token (`Authorization: Bearer <token>`).
+
+**Request Body:**
+
+```json
+{
+  "name": "My study",
+  "description": "Optional description",
+  "is_active": false
+}
+```
+
+**Response (201):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "name": "My study",
+    "description": "Optional description",
+    "is_active": false,
+    "created_at": "2026-03-04T12:00:00.000Z",
+    "updated_at": "2026-03-04T12:00:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+- `400`: Missing or invalid `name`
+- `401`: Missing/invalid token
+- `500`: Failed to create study
+
+---
+
 ## Planned Endpoints
 
-- **Studies**: get single study by ID; CRUD and trial management from admin panel (authenticated).
+- **Studies**: get single study by ID; update/delete; trial management from admin panel (authenticated).
 - **Stimuli**: list stimuli for a study; media URLs (e.g. pre-signed); upload from admin panel (authenticated).
 - **Responses**: `POST /api/responses` — submit participant response (see AGENTS.md for request/response example).
 - **Admin panel** (all authenticated): study/trial CRUD, stimulus upload, data export, analytics (automated from stored data).
