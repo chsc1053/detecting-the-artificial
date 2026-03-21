@@ -11,8 +11,8 @@ Single **experimenter / admin** surface: authenticated, used to configure studie
 
 ## Global chrome (all authenticated admin routes)
 
-- **Top bar (optional minimal)**: product name (“Detecting the Artificial · Admin”), signed-in email, **Sign out**.
-- **Side navigation** (primary): links below. Current section is highlighted.
+- **Side navigation** (primary, fixed on wide viewports while main content scrolls): product name + “Admin”, **signed-in email** under the brand, nav links, **Sign out** at the bottom of the sidebar. No separate top bar.
+- **Breadcrumbs** (recommended on nested pages): e.g. `Studies > [Study name]` in page content.
 - **Breadcrumbs** (recommended on nested pages): `Studies > [Study name] > Trials` to reduce disorientation.
 
 ## Route map (conceptual)
@@ -25,6 +25,7 @@ Single **experimenter / admin** surface: authenticated, used to configure studie
 | `/admin/studies/:studyId` | **Study workspace** — overview + tabs or sub-routes for trials, stimuli, settings |
 | `/admin/studies/:studyId/trials` | **Trials** for this study (order, types, links to stimuli) |
 | `/admin/studies/:studyId/stimuli` | **Stimulus library** for this study (upload, metadata, modality, model name) |
+| `/admin/studies/:studyId/responses` | **Responses** — participant submissions for this study (table/export when implemented) |
 | `/admin/studies/:studyId/settings` | **Study settings** — name, description, active, future: participant URL, consent copy |
 | `/admin/analytics` | **Global analytics** (optional) or entry point to “pick a study” |
 | `/admin/studies/:studyId/analytics` | **Study-scoped analytics** (per-study dashboards) |
@@ -65,8 +66,9 @@ Suggested content:
 - **Header**: study name, status badge, primary actions (Activate/Deactivate, **Preview participant flow** when ready).
 - **Tabs or sub-nav** (recommended):
   - **Overview** — short description, status, links to trials/stimuli/analytics.
+  - **Stimuli** — upload/manage assets; modality/model metadata (before trials so trials can reference stimuli).
   - **Trials** — ordered list; add/edit/remove; forced-choice vs single-item; assign stimulus pairs or single stimulus.
-  - **Stimuli** — upload/manage assets; modality/model metadata.
+  - **Responses** — list/filter participant responses and trial-level data for this study (placeholder UI until backend exists).
   - **Analytics** — study-specific metrics.
   - **Export** — download anonymized data for this study.
   - **Settings** — rename, description, delete study (with confirmation).
@@ -95,7 +97,8 @@ Suggested content:
 
 - **Done:** Nested routes with `Outlet` — `AdminLayout` wraps `/admin` and `/admin/studies`; sidebar links use `NavLink`.
 - **Done:** Dashboard at **`/admin`** (`AdminDashboardHome`) — quick actions + stats + recent studies; **Studies** at **`/admin/studies`** (`AdminStudiesPage`) — create form + full list.
-- **Next:** Study workspace (`/admin/studies/:studyId`), analytics and export routes, optional `/admin/studies/new` if create moves to a dedicated page.
+- **Done:** Study workspace **`/admin/studies/:studyId`** — `overview`, **`stimuli`** (add text stimuli; more modalities later), **`trials`**, and **`responses`** (placeholder tab; no responses API yet); backend: `GET/PATCH /admin/studies/:id`, `GET/POST /admin/studies/:id/trials`, `GET/POST /admin/stimuli` (text MVP). Studies list and dashboard recent studies show an **Edit** control (icon + label) per row.
+- **Next:** Participant responses API + wire **Responses** tab; media/S3 for non-text stimuli; analytics and export routes; optional `/admin/studies/new` if create moves to a dedicated page.
 
 ## Related
 

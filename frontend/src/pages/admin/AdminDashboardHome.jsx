@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { EditIcon } from '../../components/icons/EditIcon.jsx'
 
 export function AdminDashboardHome() {
   const [studies, setStudies] = useState([])
@@ -102,13 +103,28 @@ export function AdminDashboardHome() {
           <ul className="study-list study-list--compact">
             {recent.map((s) => (
               <li key={s.id} className="study-item">
-                <div className="study-item-title">
-                  {s.name}
-                  <span
-                    className={`study-badge ${s.is_active ? 'study-badge--on' : 'study-badge--off'}`}
+                <div className="study-item-header">
+                  <div className="study-item-title">
+                    <Link
+                      className="study-item-link"
+                      to={`/admin/studies/${s.id}/overview`}
+                    >
+                      {s.name}
+                    </Link>
+                    <span
+                      className={`study-badge ${s.is_active ? 'study-badge--on' : 'study-badge--off'}`}
+                    >
+                      {s.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <Link
+                    to={`/admin/studies/${s.id}/overview`}
+                    className="study-edit-btn"
+                    aria-label={`Edit study: ${s.name}`}
                   >
-                    {s.is_active ? 'Active' : 'Inactive'}
-                  </span>
+                    <EditIcon />
+                    <span>Edit</span>
+                  </Link>
                 </div>
                 {s.description && (
                   <p className="study-item-desc">{s.description}</p>

@@ -1,6 +1,6 @@
 /**
  * File: pages/admin/AdminLayout.jsx
- * Purpose: Authenticated admin shell — sidebar, top bar, session gate, Outlet for child routes.
+ * Purpose: Authenticated admin shell — fixed sidebar (email + nav + sign out), session gate, Outlet.
  * Dependencies: react, react-router-dom
  * Related: docs/features/admin-panel.md
  */
@@ -76,11 +76,17 @@ export function AdminLayout() {
   return (
     <div className="admin-app">
       <aside className="admin-sidebar" aria-label="Admin navigation">
-        <div className="admin-sidebar-brand">
-          <Link to="/admin">Detecting the Artificial</Link>
-          <span className="admin-sidebar-tag">Admin</span>
+        <div className="admin-sidebar-top">
+          <div className="admin-sidebar-brand">
+            <Link to="/admin">Detecting the Artificial</Link>
+            <span className="admin-sidebar-tag">Admin</span>
+          </div>
+          <div className="admin-sidebar-user">
+            <span className="admin-sidebar-user-label">Signed in</span>
+            <span className="admin-email">{email}</span>
+          </div>
         </div>
-        <nav className="admin-nav">
+        <nav className="admin-nav" aria-label="Primary">
           <NavLink to="/admin" end className="admin-nav-link">
             Dashboard
           </NavLink>
@@ -88,20 +94,15 @@ export function AdminLayout() {
             Studies
           </NavLink>
         </nav>
+        <div className="admin-sidebar-footer">
+          <button type="button" className="btn btn-ghost" onClick={signOut}>
+            Sign out
+          </button>
+        </div>
       </aside>
 
       <div className="admin-main-column">
-        <header className="admin-header">
-          <div className="admin-header-spacer" aria-hidden />
-          <div className="admin-user">
-            <span className="admin-email">{email}</span>
-            <button type="button" className="btn btn-ghost" onClick={signOut}>
-              Sign out
-            </button>
-          </div>
-        </header>
-
-        <main className="admin-body admin-body--scroll">
+        <main className="admin-body">
           <Outlet />
         </main>
       </div>

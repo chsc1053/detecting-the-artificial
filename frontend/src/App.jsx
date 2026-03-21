@@ -5,10 +5,18 @@
  * Related: docs/architecture/frontend.md, docs/features/admin-panel.md
  */
 
-import { Link, Route, Routes, useNavigate } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { AdminLayout } from './pages/admin/AdminLayout.jsx'
 import { AdminDashboardHome } from './pages/admin/AdminDashboardHome.jsx'
 import { AdminStudiesPage } from './pages/admin/AdminStudiesPage.jsx'
+import {
+  StudyWorkspaceLayout,
+  StudyWorkspaceIndexRedirect,
+} from './pages/admin/StudyWorkspaceLayout.jsx'
+import { StudyOverviewTab } from './pages/admin/StudyOverviewTab.jsx'
+import { StudyTrialsTab } from './pages/admin/StudyTrialsTab.jsx'
+import { StudyStimuliTab } from './pages/admin/StudyStimuliTab.jsx'
+import { StudyResponsesTab } from './pages/admin/StudyResponsesTab.jsx'
 import { useState, useEffect } from 'react'
 import './App.css'
 
@@ -136,6 +144,13 @@ function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboardHome />} />
         <Route path="studies" element={<AdminStudiesPage />} />
+        <Route path="studies/:studyId" element={<StudyWorkspaceLayout />}>
+          <Route index element={<StudyWorkspaceIndexRedirect />} />
+          <Route path="overview" element={<StudyOverviewTab />} />
+          <Route path="stimuli" element={<StudyStimuliTab />} />
+          <Route path="trials" element={<StudyTrialsTab />} />
+          <Route path="responses" element={<StudyResponsesTab />} />
+        </Route>
       </Route>
     </Routes>
   )

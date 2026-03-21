@@ -157,10 +157,84 @@
 
 ---
 
+### GET /admin/studies/:studyId
+
+**Description:** Fetch one study by UUID.
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": { ...study row } }`
+
+**Error Responses:** `400` invalid id, `404` not found, `401`, `500`
+
+---
+
+### PATCH /admin/studies/:studyId
+
+**Description:** Update `name`, `description`, and/or `is_active`.
+
+**Authentication:** Bearer token.
+
+**Request Body (at least one field):** `{ "name"?, "description"?, "is_active"? }`
+
+**Response (200):** `{ "success": true, "data": { ...updated study } }`
+
+---
+
+### GET /admin/studies/:studyId/trials
+
+**Description:** List trials for a study, ordered by `trial_index`.
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": [ ...trial rows ] }`
+
+---
+
+### POST /admin/studies/:studyId/trials
+
+**Description:** Add a trial. If `trial_index` is omitted, the next index is used.
+
+**Authentication:** Bearer token.
+
+**Request Body:**
+
+- Forced-choice: `{ "task_type": "forced_choice", "human_stimulus_id": "uuid", "ai_stimulus_id": "uuid", "trial_index"?: number }`
+- Single-item: `{ "task_type": "single_item", "single_stimulus_id": "uuid", "trial_index"?: number }`
+
+**Response (201):** `{ "success": true, "data": { ...trial row } }`
+
+**Error Responses:** `400`, `404`, `409` duplicate `trial_index`, `401`, `500`
+
+---
+
+### GET /admin/stimuli
+
+**Description:** List stimuli (newest first, capped).
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": [ ... ] }`
+
+---
+
+### POST /admin/stimuli
+
+**Description:** Create a stimulus (MVP: text stimuli with `text_content`).
+
+**Authentication:** Bearer token.
+
+**Request Body:** `{ "modality": "text"|"image"|"video"|"audio", "source_type": "human"|"ai", "text_content"?: string, ... }`
+
+**Response (201):** `{ "success": true, "data": { ...stimulus row } }`
+
+---
+
 ## Planned Endpoints
 
-- **Studies**: get single study by ID; update/delete; trial management from admin panel (authenticated).
-- **Stimuli**: list stimuli for a study; media URLs (e.g. pre-signed); upload from admin panel (authenticated).
+- **Admin responses (per study):** e.g. `GET /admin/studies/:studyId/responses` — list/filter participant responses for the **Responses** tab (UI placeholder at `/admin/studies/:studyId/responses` until implemented).
+- **Studies**: delete study; study workspace routes beyond overview/trials.
+- **Stimuli**: media upload to S3; pre-signed URLs; non-text modalities.
 - **Responses**: `POST /api/responses` — submit participant response (see AGENTS.md for request/response example).
 - **Admin panel** (all authenticated): study/trial CRUD, stimulus upload, data export, analytics (automated from stored data).
 
