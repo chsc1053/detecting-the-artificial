@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
   try {
     const result = await db.query(
       `
-      SELECT id, name, description, is_active, created_at, updated_at
+      SELECT id, name, description, is_active, demographics_mandatory, created_at, updated_at
       FROM studies
       ORDER BY created_at DESC
       `

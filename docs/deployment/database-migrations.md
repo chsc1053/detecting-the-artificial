@@ -6,6 +6,7 @@ This project uses `node-pg-migrate` to version and apply PostgreSQL schema chang
 
 - Directory: `backend/migrations/`
 - Initial migration: `1774035560378_init-schema.js` (creates core tables and enums)
+- Later: `1775000000000_add-demographics-mandatory-to-studies.js` — adds `studies.demographics_mandatory`
 
 ## Prerequisites
 

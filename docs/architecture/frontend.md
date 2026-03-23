@@ -12,7 +12,8 @@ React (Vite) app in the `frontend/` directory. Created with `npm create vite@lat
 
 - **Entry**: `index.html` → `src/main.jsx` mounts `App.jsx`.
 - **Routing**: `src/main.jsx` wraps app with `BrowserRouter`.
-- **Root component**: `src/App.jsx` defines routes; admin uses nested routes under `/admin` (see [Admin panel IA](../features/admin-panel.md)).
+- **Root component**: `src/App.jsx` defines routes — **participant**: `/` (home / study picker), `/study/:studyId` (intro → trials → demographics → results); **admin** nested under `/admin` (see [Admin panel IA](../features/admin-panel.md)).
+- **Participant UI**: `src/pages/participant/ParticipantHome.jsx`, `ParticipantStudyPage.jsx`; `src/components/participant/StimulusView.jsx` (modalities); `AutoTextarea.jsx` (auto-growing open-ended response field).
 - **Admin**: `src/pages/admin/AdminLayout.jsx` — session gate, fixed left sidebar (brand, email, Dashboard / Studies, Sign out at bottom), `<Outlet />` in main column (no top bar).
 - **Admin dashboard** (`/admin`): `AdminDashboardHome.jsx` — overview, quick actions, at-a-glance counts, recent studies.
 - **Studies** (`/admin/studies`): `AdminStudiesPage.jsx` — create study and full list.

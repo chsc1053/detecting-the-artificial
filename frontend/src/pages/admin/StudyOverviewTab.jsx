@@ -17,6 +17,9 @@ export function StudyOverviewTab() {
   const [name, setName] = useState(study.name)
   const [description, setDescription] = useState(study.description ?? '')
   const [isActive, setIsActive] = useState(study.is_active)
+  const [demographicsMandatory, setDemographicsMandatory] = useState(
+    study.demographics_mandatory === true
+  )
   const [status, setStatus] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -24,6 +27,7 @@ export function StudyOverviewTab() {
     setName(study.name)
     setDescription(study.description ?? '')
     setIsActive(study.is_active)
+    setDemographicsMandatory(study.demographics_mandatory === true)
   }, [study])
 
   async function handleSubmit(e) {
@@ -41,6 +45,7 @@ export function StudyOverviewTab() {
           name,
           description: description || null,
           is_active: isActive,
+          demographics_mandatory: demographicsMandatory,
         }),
       })
       const payload = await res.json()
@@ -90,6 +95,17 @@ export function StudyOverviewTab() {
               onChange={(e) => setIsActive(e.target.checked)}
             />
             <span>Study is active</span>
+          </label>
+          <label className="field checkbox-field">
+            <input
+              type="checkbox"
+              checked={demographicsMandatory}
+              onChange={(e) => setDemographicsMandatory(e.target.checked)}
+            />
+            <span>
+              Require demographics for responses to count (participant sees a stronger
+              warning; skipping discards their trial data)
+            </span>
           </label>
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? 'Saving…' : 'Save changes'}

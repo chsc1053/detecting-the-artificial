@@ -7,9 +7,9 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate:create": "dotenv -e .env -- node-pg-migrate create",
-    "migrate:up": "dotenv -e .env -- node-pg-migrate up",
-    "migrate:down": "dotenv -e .env -- node-pg-migrate down"
+    "migrate:create": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate.js create",
+    "migrate:up": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate.js up",
+    "migrate:down": "node -r dotenv/config ./node_modules/node-pg-migrate/bin/node-pg-migrate.js down"
   },
   "engines": {
     "node": ">=18"

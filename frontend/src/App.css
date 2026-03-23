@@ -214,6 +214,13 @@
   background: var(--color-accent-hover);
 }
 
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--color-accent);
+}
+
 .btn-ghost {
   background: transparent;
   color: var(--color-muted);
@@ -223,6 +230,32 @@
 .btn-ghost:hover {
   background: var(--color-bg);
   color: var(--color-text);
+}
+
+/* Outlined secondary — same language as participant answer buttons (not faint “ghost”). */
+.btn-secondary {
+  background: #fff;
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s;
+}
+
+.btn-secondary:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 3px var(--color-accent-soft);
 }
 
 .form-message {
@@ -856,6 +889,16 @@
   color: var(--color-muted);
 }
 
+.study-badge--demo-req {
+  background: #eef4ff;
+  color: #3538cd;
+}
+
+.study-badge--demo-opt {
+  background: #f2f4f7;
+  color: var(--color-muted);
+}
+
 .study-item-desc {
   margin: 0;
   font-size: 0.875rem;
@@ -886,4 +929,483 @@
   border-radius: var(--radius-sm);
   color: #b42318;
   font-size: 0.875rem;
+}
+
+/* ——— Participant (public) flow ——— */
+.public-page.participant-flow {
+  text-align: left;
+  max-width: 42rem;
+}
+
+.participant-home-status,
+.participant-home-error {
+  margin: 1rem 0;
+  font-size: 0.9375rem;
+}
+
+.participant-home-error {
+  color: #b42318;
+}
+
+.participant-section-title {
+  margin: 2rem 0 1rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.participant-study-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: left;
+}
+
+.participant-study-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-decoration: none;
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.participant-study-card:hover {
+  border-color: var(--color-accent);
+  text-decoration: none;
+}
+
+.participant-study-name {
+  font-weight: 700;
+  font-size: 1.0625rem;
+}
+
+.participant-study-desc {
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.participant-study-meta {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.participant-flow-title {
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-align: left;
+}
+
+.participant-intro-desc {
+  margin: 0 0 1.5rem;
+  color: var(--color-muted);
+  line-height: 1.55;
+  text-align: left;
+}
+
+.participant-card {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  text-align: left;
+  box-shadow: var(--shadow-sm);
+}
+
+.participant-card-title {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.participant-counts {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.participant-total {
+  margin: 0.75rem 0 0;
+  font-size: 0.9375rem;
+}
+
+.participant-disclaimer p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.participant-progress {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+}
+
+.participant-task-prompt {
+  margin: 0 0 1rem;
+  font-size: 1.0625rem;
+}
+
+.participant-fc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 640px) {
+  .participant-fc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.participant-choice-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fafbfc;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.participant-choice-tile--selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.participant-single-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  justify-content: flex-start;
+}
+
+/* Single-item answers: unselected must not look “faded” vs selected (primary) */
+.participant-single-choices .btn-ghost {
+  background: #fff;
+  color: var(--color-text);
+  border: 2px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+  min-width: 11rem;
+  min-height: 2.875rem;
+  padding: 0.75rem 1.35rem;
+}
+
+.participant-single-choices .btn-ghost:hover {
+  background: var(--color-accent-soft);
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.participant-single-choices .btn-ghost:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 3px var(--color-accent-soft);
+}
+
+/* Selected answer: outlined “choice” style — not the same as primary CTAs (Continue). */
+.participant-single-choices .btn-primary {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border: 2px solid var(--color-accent);
+  min-width: 11rem;
+  min-height: 2.875rem;
+  padding: 0.75rem 1.35rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.participant-single-choices .btn-primary:hover {
+  background: #cfe8e7;
+  color: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.participant-single-choices .btn-primary:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--shadow-sm),
+    0 0 0 3px var(--color-accent-soft);
+}
+
+.participant-field {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.participant-field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.participant-field--grow {
+  margin-bottom: 1.25rem;
+}
+
+/* Shared participant form controls (survey + demographics) */
+.participant-input,
+.participant-select,
+.participant-auto-textarea {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  box-sizing: border-box;
+  padding: 0.75rem 1rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+/* Chevron must be layered *above* the same gradient as .participant-input — a lone
+   background-image replaces the shared gradient and leaves transparent gaps (page bg). */
+.participant-select {
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.75rem;
+  background-color: #fff;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+  background-repeat: no-repeat, no-repeat;
+  background-position: right 0.85rem center, 0 0;
+  background-size: 1rem 1rem, 100% 100%;
+}
+
+.participant-input::placeholder,
+.participant-auto-textarea::placeholder {
+  color: var(--color-muted);
+  opacity: 0.85;
+}
+
+.participant-input:hover,
+.participant-select:hover,
+.participant-auto-textarea:hover {
+  border-color: rgba(0, 0, 0, 0.12);
+}
+
+.participant-input:focus,
+.participant-auto-textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: #fff;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 3px var(--color-accent-soft);
+}
+
+.participant-select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  background-size: 1rem 1rem;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 0 0 3px var(--color-accent-soft);
+}
+
+.participant-input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.participant-input[type='number']::-webkit-outer-spin-button,
+.participant-input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.participant-auto-textarea {
+  min-height: 52px;
+  line-height: 1.55;
+  resize: none;
+  overflow: hidden;
+}
+
+.participant-field-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+.participant-demographics .participant-flow-title {
+  margin-bottom: 1.25rem;
+}
+
+.participant-card--notice {
+  margin-bottom: 1.5rem;
+  border-color: rgba(0, 0, 0, 0.08);
+  background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+}
+
+.participant-card-lead {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+
+.participant-demographics .participant-card--notice .participant-warning {
+  margin-top: 0.75rem; /* extra breathing room under the notice */
+}
+
+.participant-flow:not(.participant-demographics) .participant-warning {
+  margin-bottom: 1rem; /* vertical space below results warning */
+}
+
+.participant-required-mark {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.participant-demographics-save-hint {
+  margin: 1.25rem 0 1rem;
+}
+
+.participant-demographics-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.participant-demographics-fields .participant-field {
+  margin-bottom: 1.125rem;
+}
+
+.participant-demographics-fields .participant-field:last-child {
+  margin-bottom: 0;
+}
+
+.participant-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+}
+
+.participant-warning {
+  padding: 0.75rem 1rem;
+  background: #fffaeb;
+  border: 1px solid #fecdca;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.participant-summary-stats {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.participant-results-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+
+.participant-result-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  align-items: baseline;
+  margin-bottom: 0.5rem;
+}
+
+.participant-result-idx {
+  font-weight: 700;
+}
+
+.participant-result-ok {
+  color: #027a48;
+  font-weight: 600;
+}
+
+.participant-result-bad {
+  color: #b42318;
+  font-weight: 600;
+}
+
+.participant-result-meta {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.participant-result-meta code {
+  font-size: 0.8125rem;
+}
+
+/* Stimulus viewer (participant) */
+.stimulus-view {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  background: #fff;
+  min-height: 3rem;
+}
+
+.stimulus-view-label {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+  margin-bottom: 0.5rem;
+}
+
+.stimulus-view-body {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.stimulus-view-media {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+.stimulus-view-placeholder {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
 }

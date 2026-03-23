@@ -47,6 +47,7 @@
       "name": "Pilot Mixed Modality Study",
       "description": "Initial pilot with mixed forced-choice and single-item trials.",
       "is_active": true,
+      "demographics_mandatory": false,
       "created_at": "2026-03-04T12:00:00.000Z",
       "updated_at": "2026-03-04T12:00:00.000Z"
     }
@@ -130,7 +131,8 @@
 {
   "name": "My study",
   "description": "Optional description",
-  "is_active": false
+  "is_active": false,
+  "demographics_mandatory": false
 }
 ```
 
@@ -144,6 +146,7 @@
     "name": "My study",
     "description": "Optional description",
     "is_active": false,
+    "demographics_mandatory": false,
     "created_at": "2026-03-04T12:00:00.000Z",
     "updated_at": "2026-03-04T12:00:00.000Z"
   }
@@ -171,11 +174,11 @@
 
 ### PATCH /admin/studies/:studyId
 
-**Description:** Update `name`, `description`, and/or `is_active`.
+**Description:** Update `name`, `description`, `is_active`, and/or `demographics_mandatory`.
 
 **Authentication:** Bearer token.
 
-**Request Body (at least one field):** `{ "name"?, "description"?, "is_active"? }`
+**Request Body (at least one field):** `{ "name"?, "description"?, "is_active"?, "demographics_mandatory"? }`
 
 **Response (200):** `{ "success": true, "data": { ...updated study } }`
 
@@ -230,13 +233,84 @@
 
 ---
 
+## Participant (public, no auth)
+
+Base path: `/participant` (e.g. dev: `http://localhost:3000/participant/...`).
+
+### GET /participant/active-studies
+
+**Description:** Active studies for the participant home (with per–task-type trial counts).
+
+**Response (200):** `{ "success": true, "data": [ { id, name, description, created_at, trial_counts: { forced_choice, single_item }, trial_total } ] }`
+
+---
+
+### GET /participant/studies/:studyId/intro
+
+**Description:** Study metadata for the consent/intro screen (`demographics_mandatory`, trial counts). Fails if study inactive.
+
+**Response (200):** `{ "success": true, "data": { id, name, description, demographics_mandatory, trial_counts, trial_total } }`
+
+**Errors:** `400` invalid id, `403` inactive, `404` not found
+
+---
+
+### GET /participant/studies/:studyId/trials
+
+**Description:** Ordered trials with stimulus payloads (`modality`, `text_content`, `storage_key`, etc.) for rendering.
+
+**Response (200):** `{ "success": true, "data": [ { id, trial_index, task_type, stimuli: { human?, ai? } | { single? } } ] }`
+
+---
+
+### POST /participant/participants
+
+**Description:** Create a participant session for an active study.
+
+**Request Body:** `{ "study_id": "uuid" }`
+
+**Response (201):** `{ "success": true, "data": { id, study_id, created_at } }`
+
+---
+
+### POST /participant/responses
+
+**Description:** Record one trial answer.
+
+**Request Body:** `{ "participant_id", "trial_id", "choice_label": "human"|"ai", "confidence": 1-5, "explanation"?: string }`
+
+**Response (201):** `{ "success": true, "data": { id, is_correct, created_at } }`
+
+---
+
+### PATCH /participant/participants/:participantId/demographics
+
+**Description:** Save demographics (age, location, education, AI literacy).
+
+**Request Body:** `{ "age"?, "approx_location"?, "education_level"?, "ai_literacy"? }` (nulls allowed)
+
+---
+
+### DELETE /participant/participants/:participantId/session
+
+**Description:** When `demographics_mandatory` is true and the participant skips demographics, discard all responses and the participant row (responses cannot be used for research).
+
+**Errors:** `400` if demographics are not mandatory for the study
+
+---
+
+### GET /participant/participants/:participantId/results
+
+**Description:** Per-trial correctness and summary analytics for a completed session (responses still present).
+
+---
+
 ## Planned Endpoints
 
-- **Admin responses (per study):** e.g. `GET /admin/studies/:studyId/responses` — list/filter participant responses for the **Responses** tab (UI placeholder at `/admin/studies/:studyId/responses` until implemented).
-- **Studies**: delete study; study workspace routes beyond overview/trials.
+- **Admin responses (per study):** e.g. `GET /admin/studies/:studyId/responses` — list/filter for the **Responses** tab (UI placeholder until implemented).
+- **Studies**: delete study.
 - **Stimuli**: media upload to S3; pre-signed URLs; non-text modalities.
-- **Responses**: `POST /api/responses` — submit participant response (see AGENTS.md for request/response example).
-- **Admin panel** (all authenticated): study/trial CRUD, stimulus upload, data export, analytics (automated from stored data).
+- **Admin panel**: data export, analytics (automated from stored data).
 
 ## Related
 

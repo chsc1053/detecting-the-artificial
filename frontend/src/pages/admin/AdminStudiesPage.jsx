@@ -19,6 +19,7 @@ export function AdminStudiesPage() {
   const [newName, setNewName] = useState('')
   const [newDescription, setNewDescription] = useState('')
   const [newActive, setNewActive] = useState(false)
+  const [newDemographicsMandatory, setNewDemographicsMandatory] = useState(false)
   const [createStatus, setCreateStatus] = useState('')
   const [createError, setCreateError] = useState(false)
 
@@ -57,6 +58,7 @@ export function AdminStudiesPage() {
           name: newName,
           description: newDescription || null,
           is_active: newActive,
+          demographics_mandatory: newDemographicsMandatory,
         }),
       })
       const payload = await res.json()
@@ -70,6 +72,7 @@ export function AdminStudiesPage() {
       setNewName('')
       setNewDescription('')
       setNewActive(false)
+      setNewDemographicsMandatory(false)
       await loadStudies()
     } catch {
       setCreateStatus('Could not reach the server')
@@ -121,6 +124,17 @@ export function AdminStudiesPage() {
                 is live)
               </span>
             </label>
+            <label className="field checkbox-field">
+              <input
+                type="checkbox"
+                checked={newDemographicsMandatory}
+                onChange={(e) => setNewDemographicsMandatory(e.target.checked)}
+              />
+              <span>
+                Require demographics for responses to count (participant must submit
+                demographics or their trial data is discarded)
+              </span>
+            </label>
             <button type="submit" className="btn btn-primary">
               Create study
             </button>
@@ -167,6 +181,13 @@ export function AdminStudiesPage() {
                       className={`study-badge ${s.is_active ? 'study-badge--on' : 'study-badge--off'}`}
                     >
                       {s.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                    <span
+                      className={`study-badge ${s.demographics_mandatory === true ? 'study-badge--demo-req' : 'study-badge--demo-opt'}`}
+                    >
+                      {s.demographics_mandatory === true
+                        ? 'Demographics required'
+                        : 'Demographics optional'}
                     </span>
                   </div>
                   <Link

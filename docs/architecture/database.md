@@ -30,6 +30,7 @@ Represents a single study: a container that the experimenter fills with trials. 
 - `name` (text, required)
 - `description` (text)
 - `is_active` (boolean, default true)
+- `demographics_mandatory` (boolean, default false) — when true, participants who skip demographics cannot have trial responses counted; session is discarded server-side (see participant flow).
 - `created_at`, `updated_at` (timestamps)
 
 ### `stimuli`

@@ -116,6 +116,13 @@ export function AdminDashboardHome() {
                     >
                       {s.is_active ? 'Active' : 'Inactive'}
                     </span>
+                    <span
+                      className={`study-badge ${s.demographics_mandatory === true ? 'study-badge--demo-req' : 'study-badge--demo-opt'}`}
+                    >
+                      {s.demographics_mandatory === true
+                        ? 'Demographics required'
+                        : 'Demographics optional'}
+                    </span>
                   </div>
                   <Link
                     to={`/admin/studies/${s.id}/overview`}

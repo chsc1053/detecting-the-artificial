@@ -21,7 +21,7 @@ async function studyExists(studyId) {
  * POST /studies — Create a study (experimenter only).
  */
 router.post('/studies', requireAdminSession, async (req, res) => {
-  const { name, description, is_active } = req.body ?? {};
+  const { name, description, is_active, demographics_mandatory } = req.body ?? {};
 
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({
@@ -31,13 +31,15 @@ router.post('/studies', requireAdminSession, async (req, res) => {
   }
 
   const active = typeof is_active === 'boolean' ? is_active : false;
+  const demoMandatory =
+    typeof demographics_mandatory === 'boolean' ? demographics_mandatory : false;
 
   try {
     const result = await db.query(
-      `INSERT INTO studies (name, description, is_active)
-       VALUES ($1, $2, $3)
-       RETURNING id, name, description, is_active, created_at, updated_at`,
-      [name.trim(), description ?? null, active]
+      `INSERT INTO studies (name, description, is_active, demographics_mandatory)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, name, description, is_active, demographics_mandatory, created_at, updated_at`,
+      [name.trim(), description ?? null, active, demoMandatory]
     );
 
     return res.status(201).json({
@@ -203,7 +205,7 @@ router.get('/studies/:studyId', requireAdminSession, async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT id, name, description, is_active, created_at, updated_at
+      `SELECT id, name, description, is_active, demographics_mandatory, created_at, updated_at
        FROM studies WHERE id = $1`,
       [studyId]
     );
@@ -228,7 +230,7 @@ router.patch('/studies/:studyId', requireAdminSession, async (req, res) => {
     return res.status(400).json({ success: false, error: 'invalid study id' });
   }
 
-  const { name, description, is_active } = req.body ?? {};
+  const { name, description, is_active, demographics_mandatory } = req.body ?? {};
   const sets = [];
   const vals = [];
   let p = 1;
@@ -257,6 +259,16 @@ router.patch('/studies/:studyId', requireAdminSession, async (req, res) => {
     sets.push(`is_active = $${p++}`);
     vals.push(is_active);
   }
+  if (demographics_mandatory !== undefined) {
+    if (typeof demographics_mandatory !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: 'demographics_mandatory must be boolean',
+      });
+    }
+    sets.push(`demographics_mandatory = $${p++}`);
+    vals.push(demographics_mandatory);
+  }
 
   if (sets.length === 0) {
     return res.status(400).json({
@@ -272,7 +284,7 @@ router.patch('/studies/:studyId', requireAdminSession, async (req, res) => {
     const result = await db.query(
       `UPDATE studies SET ${sets.join(', ')}
        WHERE id = $${p}
-       RETURNING id, name, description, is_active, created_at, updated_at`,
+       RETURNING id, name, description, is_active, demographics_mandatory, created_at, updated_at`,
       vals
     );
     if (result.rowCount === 0) {

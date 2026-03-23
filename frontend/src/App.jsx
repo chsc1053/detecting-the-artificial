@@ -1,6 +1,6 @@
 /**
  * File: App.jsx
- * Purpose: Root UI — public home, admin login, nested admin routes (layout + dashboard + studies).
+ * Purpose: Root UI — participant home + study flow, admin login, nested admin routes.
  * Dependencies: react, react-router-dom
  * Related: docs/architecture/frontend.md, docs/features/admin-panel.md
  */
@@ -17,40 +17,10 @@ import { StudyOverviewTab } from './pages/admin/StudyOverviewTab.jsx'
 import { StudyTrialsTab } from './pages/admin/StudyTrialsTab.jsx'
 import { StudyStimuliTab } from './pages/admin/StudyStimuliTab.jsx'
 import { StudyResponsesTab } from './pages/admin/StudyResponsesTab.jsx'
+import { ParticipantHome } from './pages/participant/ParticipantHome.jsx'
+import { ParticipantStudyPage } from './pages/participant/ParticipantStudyPage.jsx'
 import { useState, useEffect } from 'react'
 import './App.css'
-
-function ParticipantHome() {
-  const [backendStatus, setBackendStatus] = useState('checking')
-
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data) => setBackendStatus(data?.success ? 'connected' : 'error'))
-      .catch(() => setBackendStatus('unreachable'))
-  }, [])
-
-  const ok = backendStatus === 'connected'
-
-  return (
-    <div className="app-shell app-shell--public">
-      <main className="public-page">
-        <h1 className="brand">Detecting the Artificial</h1>
-        <p className="tagline">
-          Multimodal human–AI detection studies for research.
-        </p>
-        <div
-          className={`status-pill ${ok ? 'status-pill--ok' : 'status-pill--bad'}`}
-        >
-          API {backendStatus === 'checking' ? '…' : ok ? 'connected' : 'unavailable'}
-        </div>
-        <footer className="public-footer">
-          <Link to="/admin/login">Experimenter / admin sign in</Link>
-        </footer>
-      </main>
-    </div>
-  )
-}
 
 function AdminLogin() {
   const navigate = useNavigate()
@@ -140,6 +110,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<ParticipantHome />} />
+      <Route path="/study/:studyId" element={<ParticipantStudyPage />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboardHome />} />
