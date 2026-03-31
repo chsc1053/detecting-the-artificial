@@ -184,6 +184,18 @@
 
 ---
 
+### DELETE /admin/studies/:studyId
+
+**Description:** Delete a study. Participants for that study are removed first; deleting the study cascades to `study_trials` and related `responses` per schema.
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": { "id": "uuid" } }`
+
+**Errors:** `400` invalid study id, `404` study not found, `401` / `403` if not authenticated, `500` on failure.
+
+---
+
 ### GET /admin/studies/:studyId/trials
 
 **Description:** List trials for a study, ordered by `trial_index`.
@@ -211,23 +223,38 @@
 
 ---
 
-### GET /admin/stimuli
+### GET /admin/studies/:studyId/responses
 
-**Description:** List stimuli (newest first, capped).
+**Description:** List all trial responses for a study, with `trial_index` / `task_type` from `study_trials` and optional demographics from `participants` (when present).
 
 **Authentication:** Bearer token.
 
-**Response (200):** `{ "success": true, "data": [ ... ] }`
+**Response (200):** `{ "success": true, "data": [ { id, study_id, trial_id, participant_id, choice_label, confidence, explanation, is_correct, created_at, trial_index, task_type, age, approx_location, education_level, ai_literacy } ] }`
+
+**Errors:** `400` invalid study id, `404` study not found, `401` / `403` if not authenticated.
+
+---
+
+### GET /admin/stimuli
+
+**Description:** List all stimuli (newest first by `created_at`).
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": [ { id, modality, source_type, storage_key, text_content, model_name, notes, created_at, updated_at } ] }`
 
 ---
 
 ### POST /admin/stimuli
 
-**Description:** Create a stimulus (MVP: text stimuli with `text_content`).
+**Description:** Create a stimulus. Text uses inline `text_content`. Image, video, and audio require a **media URL or key** in `storage_key` (participant UI treats `http`/`https` values as embeddable URLs) and a non-empty **`model_name`** (source / model description). `notes` is optional.
 
 **Authentication:** Bearer token.
 
-**Request Body:** `{ "modality": "text"|"image"|"video"|"audio", "source_type": "human"|"ai", "text_content"?: string, ... }`
+**Request Body:**
+
+- **Text:** `{ "modality": "text", "source_type": "human"|"ai", "text_content": string, "model_name"?: string|null, "notes"?: string|null }` — `text_content` required (non-empty after trim).
+- **Non-text:** `{ "modality": "image"|"video"|"audio", "source_type": "human"|"ai", "storage_key": string, "model_name": string, "notes"?: string|null }` — `storage_key` and `model_name` required (non-empty after trim).
 
 **Response (201):** `{ "success": true, "data": { ...stimulus row } }`
 
@@ -307,10 +334,8 @@ Base path: `/participant` (e.g. dev: `http://localhost:3000/participant/...`).
 
 ## Planned Endpoints
 
-- **Admin responses (per study):** e.g. `GET /admin/studies/:studyId/responses` — list/filter for the **Responses** tab (UI placeholder until implemented).
-- **Studies**: delete study.
-- **Stimuli**: media upload to S3; pre-signed URLs; non-text modalities.
-- **Admin panel**: data export, analytics (automated from stored data).
+- **Stimuli**: authenticated upload to S3; issue pre-signed URLs for delivery (today, non-text stimuli use a URL or opaque key in `storage_key`; participants only auto-render media when `storage_key` is `http`/`https`).
+- **Admin panel**: dedicated export API and analytics endpoints beyond the per-study responses CSV produced in the UI.
 
 ## Related
 

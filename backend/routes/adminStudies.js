@@ -299,4 +299,82 @@ router.patch('/studies/:studyId', requireAdminSession, async (req, res) => {
   }
 });
 
+/**
+ * DELETE /studies/:studyId — Delete a study (and related trials/responses).
+ */
+router.delete('/studies/:studyId', requireAdminSession, async (req, res) => {
+  const { studyId } = req.params;
+  if (!isUuid(studyId)) {
+    return res.status(400).json({ success: false, error: 'invalid study id' });
+  }
+
+  try {
+    if (!(await studyExists(studyId))) {
+      return res.status(404).json({ success: false, error: 'study not found' });
+    }
+
+    // Delete participants first so responses tied to those participants can be removed via cascade.
+    await db.query('DELETE FROM participants WHERE study_id = $1', [studyId]);
+
+    const result = await db.query('DELETE FROM studies WHERE id = $1 RETURNING id', [studyId]);
+    return res.status(200).json({
+      success: true,
+      data: { id: result.rows[0]?.id ?? studyId },
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'failed to delete study',
+    });
+  }
+});
+
+/**
+ * GET /studies/:studyId/responses — List trial responses for a study (with trial index + optional demographics).
+ */
+router.get('/studies/:studyId/responses', requireAdminSession, async (req, res) => {
+  const { studyId } = req.params;
+  if (!isUuid(studyId)) {
+    return res.status(400).json({ success: false, error: 'invalid study id' });
+  }
+
+  try {
+    if (!(await studyExists(studyId))) {
+      return res.status(404).json({ success: false, error: 'study not found' });
+    }
+
+    const result = await db.query(
+      `SELECT
+         r.id,
+         r.study_id,
+         r.trial_id,
+         r.participant_id,
+         r.choice_label,
+         r.confidence,
+         r.explanation,
+         r.is_correct,
+         r.created_at,
+         st.trial_index,
+         st.task_type,
+         p.age,
+         p.approx_location,
+         p.education_level,
+         p.ai_literacy
+       FROM responses r
+       INNER JOIN study_trials st ON st.id = r.trial_id AND st.study_id = r.study_id
+       LEFT JOIN participants p ON p.id = r.participant_id
+       WHERE r.study_id = $1
+       ORDER BY r.created_at DESC`,
+      [studyId]
+    );
+
+    return res.status(200).json({ success: true, data: result.rows });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'failed to list responses',
+    });
+  }
+});
+
 module.exports = router;

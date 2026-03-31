@@ -92,8 +92,6 @@ export function StudyTrialsTab() {
     }
   }
 
-  const textStimuli = stimuli.filter((s) => s.modality === 'text')
-
   const stimuliById = useMemo(() => {
     const m = new Map()
     for (const s of stimuli) {
@@ -137,7 +135,7 @@ export function StudyTrialsTab() {
                     required
                   >
                     <option value="">Select…</option>
-                    {textStimuli
+                    {stimuli
                       .filter((s) => s.source_type === 'human')
                       .map((s) => (
                         <option key={s.id} value={s.id}>
@@ -155,7 +153,7 @@ export function StudyTrialsTab() {
                     required
                   >
                     <option value="">Select…</option>
-                    {textStimuli
+                    {stimuli
                       .filter((s) => s.source_type === 'ai')
                       .map((s) => (
                         <option key={s.id} value={s.id}>
@@ -177,7 +175,7 @@ export function StudyTrialsTab() {
                   required
                 >
                   <option value="">Select…</option>
-                  {textStimuli.map((s) => (
+                  {stimuli.map((s) => (
                     <option key={s.id} value={s.id}>
                       {stimulusLabel(s)}
                     </option>

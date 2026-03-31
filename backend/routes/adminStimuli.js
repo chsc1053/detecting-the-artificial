@@ -20,10 +20,9 @@ const SOURCE_TYPES = new Set(['human', 'ai']);
 router.get('/stimuli', requireAdminSession, async (req, res) => {
   try {
     const result = await db.query(
-      `SELECT id, modality, source_type, text_content, model_name, notes, created_at, updated_at
+      `SELECT id, modality, source_type, storage_key, text_content, model_name, notes, created_at, updated_at
        FROM stimuli
-       ORDER BY created_at DESC
-       LIMIT 500`
+       ORDER BY created_at DESC`
     );
     return res.status(200).json({ success: true, data: result.rows });
   } catch (error) {
@@ -59,6 +58,18 @@ router.post('/stimuli', requireAdminSession, async (req, res) => {
       error: 'text_content is required for text modality',
     });
   }
+  if (modality !== 'text' && (!storage_key || !String(storage_key).trim())) {
+    return res.status(400).json({
+      success: false,
+      error: 'storage_key is required for non-text modalities',
+    });
+  }
+  if (modality !== 'text' && (!model_name || !String(model_name).trim())) {
+    return res.status(400).json({
+      success: false,
+      error: 'model_name is required for non-text modalities',
+    });
+  }
 
   try {
     const result = await db.query(
@@ -68,9 +79,9 @@ router.post('/stimuli', requireAdminSession, async (req, res) => {
       [
         modality,
         source_type,
-        storage_key ?? null,
+        storage_key ? String(storage_key).trim() : null,
         modality === 'text' ? String(text_content).trim() : null,
-        model_name ?? null,
+        model_name ? String(model_name).trim() : null,
         notes ?? null,
       ]
     );

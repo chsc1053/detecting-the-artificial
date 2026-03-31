@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { EditIcon } from '../../components/icons/EditIcon.jsx'
+import { DeleteIcon } from '../../components/icons/DeleteIcon.jsx'
 
 function getToken() {
   return localStorage.getItem('adminToken')
@@ -18,10 +19,11 @@ export function AdminStudiesPage() {
   const [studiesLoad, setStudiesLoad] = useState('idle')
   const [newName, setNewName] = useState('')
   const [newDescription, setNewDescription] = useState('')
-  const [newActive, setNewActive] = useState(false)
-  const [newDemographicsMandatory, setNewDemographicsMandatory] = useState(false)
   const [createStatus, setCreateStatus] = useState('')
   const [createError, setCreateError] = useState(false)
+  const [deleteStatus, setDeleteStatus] = useState('')
+  const [deleteError, setDeleteError] = useState(false)
+  const [deletingStudyId, setDeletingStudyId] = useState(null)
 
   async function loadStudies() {
     setStudiesLoad('loading')
@@ -43,6 +45,34 @@ export function AdminStudiesPage() {
     loadStudies()
   }, [])
 
+  async function deleteStudy(studyId, studyName) {
+    if (!window.confirm(`Delete study "${studyName}"? This cannot be undone.`)) return
+    setDeleteStatus('Deleting…')
+    setDeleteError(false)
+    setDeletingStudyId(studyId)
+    try {
+      const res = await fetch(`/api/admin/studies/${studyId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+      const payload = await res.json()
+      if (!res.ok || !payload?.success) {
+        setDeleteStatus(payload?.error || 'Could not delete study')
+        setDeleteError(true)
+        return
+      }
+      setDeleteStatus('Study deleted.')
+      await loadStudies()
+    } catch {
+      setDeleteStatus('Could not reach the server')
+      setDeleteError(true)
+    } finally {
+      setDeletingStudyId(null)
+    }
+  }
+
   async function handleCreateStudy(event) {
     event.preventDefault()
     setCreateStatus('Saving…')
@@ -57,8 +87,6 @@ export function AdminStudiesPage() {
         body: JSON.stringify({
           name: newName,
           description: newDescription || null,
-          is_active: newActive,
-          demographics_mandatory: newDemographicsMandatory,
         }),
       })
       const payload = await res.json()
@@ -71,8 +99,6 @@ export function AdminStudiesPage() {
       setCreateError(false)
       setNewName('')
       setNewDescription('')
-      setNewActive(false)
-      setNewDemographicsMandatory(false)
       await loadStudies()
     } catch {
       setCreateStatus('Could not reach the server')
@@ -81,11 +107,11 @@ export function AdminStudiesPage() {
   }
 
   return (
-    <div>
+    <div className="admin-studies-page">
       <h1 className="admin-page-title">Studies</h1>
       <p className="admin-page-lead">
-        Create studies and manage configuration. Trials and stimuli will be added
-        here next.
+        Create studies and manage configuration. Open a study to add stimuli,
+        trials, and review responses.
       </p>
 
       <section className="admin-section">
@@ -100,7 +126,7 @@ export function AdminStudiesPage() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 required
-                placeholder="e.g. Pilot — text detection"
+              placeholder="Study title"
               />
             </div>
             <div className="field">
@@ -110,31 +136,9 @@ export function AdminStudiesPage() {
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
                 rows={3}
-                placeholder="Optional notes for your team"
+                placeholder="Short description"
               />
             </div>
-            <label className="field checkbox-field">
-              <input
-                type="checkbox"
-                checked={newActive}
-                onChange={(e) => setNewActive(e.target.checked)}
-              />
-              <span>
-                Mark as active (ready for participants once the participant flow
-                is live)
-              </span>
-            </label>
-            <label className="field checkbox-field">
-              <input
-                type="checkbox"
-                checked={newDemographicsMandatory}
-                onChange={(e) => setNewDemographicsMandatory(e.target.checked)}
-              />
-              <span>
-                Require demographics for responses to count (participant must submit
-                demographics or their trial data is discarded)
-              </span>
-            </label>
             <button type="submit" className="btn btn-primary">
               Create study
             </button>
@@ -154,6 +158,14 @@ export function AdminStudiesPage() {
         <h2 className="admin-section-title">All studies</h2>
         {studiesLoad === 'loading' && (
           <div className="admin-panel-card loading-state">Loading studies…</div>
+        )}
+        {deleteStatus && (
+          <p
+            className={`form-message ${deleteError ? 'form-message--error' : ''}`}
+            style={{ marginTop: '0.75rem' }}
+          >
+            {deleteStatus}
+          </p>
         )}
         {studiesLoad === 'error' && (
           <div className="admin-panel-card error-banner">
@@ -190,14 +202,26 @@ export function AdminStudiesPage() {
                         : 'Demographics optional'}
                     </span>
                   </div>
-                  <Link
-                    to={`/admin/studies/${s.id}/overview`}
-                    className="study-edit-btn"
-                    aria-label={`Edit study: ${s.name}`}
-                  >
-                    <EditIcon />
-                    <span>Edit</span>
-                  </Link>
+                  <div className="study-item-actions">
+                    <Link
+                      to={`/admin/studies/${s.id}/overview`}
+                      className="study-edit-btn"
+                      aria-label={`Edit study: ${s.name}`}
+                    >
+                      <EditIcon />
+                      <span>Edit</span>
+                    </Link>
+                    <button
+                      type="button"
+                      className="study-delete-btn"
+                      onClick={() => deleteStudy(s.id, s.name)}
+                      disabled={deletingStudyId === s.id}
+                      aria-label={`Delete study: ${s.name}`}
+                    >
+                      <DeleteIcon />
+                      <span>{deletingStudyId === s.id ? 'Deleting…' : 'Delete'}</span>
+                    </button>
+                  </div>
                 </div>
                 {s.description && (
                   <p className="study-item-desc">{s.description}</p>

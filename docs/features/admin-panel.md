@@ -12,8 +12,7 @@ Single **experimenter / admin** surface: authenticated, used to configure studie
 ## Global chrome (all authenticated admin routes)
 
 - **Side navigation** (primary, fixed on wide viewports while main content scrolls): product name + “Admin”, **signed-in email** under the brand, nav links, **Sign out** at the bottom of the sidebar. No separate top bar.
-- **Breadcrumbs** (recommended on nested pages): e.g. `Studies > [Study name]` in page content.
-- **Breadcrumbs** (recommended on nested pages): `Studies > [Study name] > Trials` to reduce disorientation.
+- **Breadcrumbs** (recommended on nested pages): e.g. `Studies > [Study name] > Trials` in page content to reduce disorientation.
 
 ## Route map (conceptual)
 
@@ -22,10 +21,11 @@ Single **experimenter / admin** surface: authenticated, used to configure studie
 | `/admin` | **Admin home** (dashboard) |
 | `/admin/studies` | **Studies list** — browse/search all studies; create new study |
 | `/admin/studies/new` | **Create study** (or modal from list; route optional) |
-| `/admin/studies/:studyId` | **Study workspace** — overview + tabs or sub-routes for trials, stimuli, settings |
-| `/admin/studies/:studyId/trials` | **Trials** for this study (order, types, links to stimuli) |
-| `/admin/studies/:studyId/stimuli` | **Stimulus library** for this study (upload, metadata, modality, model name) |
-| `/admin/studies/:studyId/responses` | **Responses** — participant submissions for this study (table/export when implemented) |
+| `/admin/stimuli` | **Global stimulus library** — create and list stimuli (all modalities); reused across studies |
+| `/admin/studies/:studyId` | **Study workspace** — overview + tabs for trials, stimuli pointer, responses |
+| `/admin/studies/:studyId/trials` | **Trials** for this study (order, types, links to stimuli; any modality) |
+| `/admin/studies/:studyId/stimuli` | **Stimuli** — shortcut copy + link to **`/admin/stimuli`** (no per-study-only library) |
+| `/admin/studies/:studyId/responses` | **Responses** — table of trial responses, trial filter, **Download CSV** (client-side export) |
 | `/admin/studies/:studyId/settings` | **Study settings** — name, description, active, future: participant URL, consent copy |
 | `/admin/analytics` | **Global analytics** (optional) or entry point to “pick a study” |
 | `/admin/studies/:studyId/analytics` | **Study-scoped analytics** (per-study dashboards) |
@@ -59,16 +59,16 @@ Suggested content:
 
 - Table or cards: name, status (active/inactive), last updated, trial count (when available).
 - **Create study** CTA.
-- Row actions: **Open** (workspace), **Duplicate** (future), **Archive** (future).
+- Row actions: **Open** (workspace via **Edit**), **Delete** study (with confirmation).
 
 ### Study workspace (`/admin/studies/:studyId`)
 
 - **Header**: study name, status badge, primary actions (Activate/Deactivate, **Preview participant flow** when ready).
 - **Tabs or sub-nav** (recommended):
-  - **Overview** — short description, status, links to trials/stimuli/analytics.
-  - **Stimuli** — upload/manage assets; modality/model metadata (before trials so trials can reference stimuli).
-  - **Trials** — ordered list; add/edit/remove; forced-choice vs single-item; assign stimulus pairs or single stimulus.
-  - **Responses** — list/filter participant responses and trial-level data for this study (placeholder UI until backend exists).
+  - **Overview** — short description, status, demographics flag, activate/deactivate, **delete study** (with confirmation), links to deeper tabs.
+  - **Stimuli** — in-app pointer to the **global** Stimuli page (`/admin/stimuli`); all create/edit happens there.
+  - **Trials** — ordered list; add/remove; forced-choice vs single-item; pick stimuli from the global library (all modalities).
+  - **Responses** — live data from `GET /admin/studies/:studyId/responses`; filter by trial; CSV download.
   - **Analytics** — study-specific metrics.
   - **Export** — download anonymized data for this study.
   - **Settings** — rename, description, delete study (with confirmation).
@@ -85,20 +85,21 @@ Suggested content:
 
 ## Navigation behavior
 
-- **Sidebar** items (example order):
+- **Sidebar** items (implemented order):
   1. **Dashboard** → `/admin`
   2. **Studies** → `/admin/studies`
-  3. **Analytics** → `/admin/analytics` (or disabled until MVP)
-  4. **Export** → `/admin/export` or merged under Studies until needed
+  3. **Stimuli** → `/admin/stimuli`
+  - **Analytics** / **Export** global nav items are not wired yet (see [analytics](analytics.md), [data export](data-export.md)).
 - Selecting a study from the list **navigates** to `/admin/studies/:studyId` (study workspace), not the dashboard.
 - **Login** remains `/admin/login`; unauthenticated users redirect to login for any `/admin/*` except login.
 
 ## Implementation notes (frontend)
 
-- **Done:** Nested routes with `Outlet` — `AdminLayout` wraps `/admin` and `/admin/studies`; sidebar links use `NavLink`.
-- **Done:** Dashboard at **`/admin`** (`AdminDashboardHome`) — quick actions + stats + recent studies; **Studies** at **`/admin/studies`** (`AdminStudiesPage`) — create form + full list.
-- **Done:** Study workspace **`/admin/studies/:studyId`** — `overview`, **`stimuli`** (add text stimuli; more modalities later), **`trials`**, and **`responses`** (placeholder tab; no responses API yet); backend: `GET/PATCH /admin/studies/:id`, `GET/POST /admin/studies/:id/trials`, `GET/POST /admin/stimuli` (text MVP). Studies list and dashboard recent studies show an **Edit** control (icon + label) per row.
-- **Next:** Participant responses API + wire **Responses** tab; media/S3 for non-text stimuli; analytics and export routes; optional `/admin/studies/new` if create moves to a dedicated page.
+- **Done:** Nested routes with `Outlet` — `AdminLayout` wraps authenticated admin routes; sidebar **Dashboard**, **Studies**, **Stimuli** use `NavLink`.
+- **Done:** Dashboard at **`/admin`**; **Studies** at **`/admin/studies`** — create form + list with **Edit** / **Delete**; **`DELETE /admin/studies/:studyId`** removes participants then the study (cascading trials/responses).
+- **Done:** **Global Stimuli** at **`/admin/stimuli`** — modality tabs, create text (inline) or image/video/audio via **media URL** + source description; list with previews (`StimulusItemCard`). Study workspace **`stimuli`** tab is explanatory + link only.
+- **Done:** Study workspace **`/admin/studies/:studyId`** — `overview`, `stimuli` (link), **`trials`** (all modalities in dropdowns), **`responses`** (table + filter + CSV; `GET /admin/studies/:studyId/responses`). Backend: `GET/PATCH/DELETE /admin/studies/:id`, `GET/POST .../trials`, `GET .../responses`, `GET/POST /admin/stimuli`.
+- **Next:** S3 upload and pre-signed URLs; dedicated **Analytics** and **Export** areas/APIs; optional `/admin/studies/new`; study duplication/archival; separate **Settings** route if split from overview.
 
 ## Related
 

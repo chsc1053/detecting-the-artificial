@@ -1,12 +1,13 @@
 # Data Export
 
-(To be filled when export functionality is implemented.)
+## Implemented (lightweight)
 
-## Scope
+- **Study workspace → Responses:** client-side **Download CSV** from the loaded response list (same fields as `GET /admin/studies/:studyId/responses` after filtering). Suitable for ad-hoc downloads; not a dedicated export job or server-side archive.
 
-- From the **admin panel** (auth-protected): export anonymized response data (e.g. CSV/JSON) for a study.
-- Including accuracy, confidence, explanations, and demographics for statistical analysis.
-- Access control: export only for authenticated experimenter (admin) users.
+## Planned
+
+- From the **admin panel**: server-side or hub export of anonymized response data (CSV/JSON) with optional date range, JSON export, and documented columns.
+- Access control: export only for authenticated experimenter users; audit trail optional.
 
 ## Related
 

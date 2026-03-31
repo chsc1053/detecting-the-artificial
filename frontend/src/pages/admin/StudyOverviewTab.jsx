@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 
 function authHeaders() {
   const t = localStorage.getItem('adminToken')
@@ -14,6 +14,7 @@ function authHeaders() {
 
 export function StudyOverviewTab() {
   const { study, reloadStudy } = useOutletContext()
+  const navigate = useNavigate()
   const [name, setName] = useState(study.name)
   const [description, setDescription] = useState(study.description ?? '')
   const [isActive, setIsActive] = useState(study.is_active)
@@ -22,6 +23,13 @@ export function StudyOverviewTab() {
   )
   const [status, setStatus] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const settingsDirty =
+    name !== study.name ||
+    description !== (study.description ?? '') ||
+    isActive !== study.is_active ||
+    demographicsMandatory !== (study.demographics_mandatory === true)
 
   useEffect(() => {
     setName(study.name)
@@ -62,6 +70,31 @@ export function StudyOverviewTab() {
     setSaving(false)
   }
 
+  async function handleDeleteStudy() {
+    if (!window.confirm(`Delete study "${study.name}"? This cannot be undone.`)) return
+    setDeleting(true)
+    setStatus('')
+    try {
+      const res = await fetch(`/api/admin/studies/${study.id}`, {
+        method: 'DELETE',
+        headers: {
+          ...authHeaders(),
+        },
+      })
+      const payload = await res.json()
+      if (!res.ok || !payload?.success) {
+        setStatus(payload?.error || 'Could not delete study')
+        setDeleting(false)
+        return
+      }
+      navigate('/admin/studies')
+    } catch {
+      setStatus('Could not reach the server')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div>
       <p className="admin-page-lead">
@@ -74,9 +107,11 @@ export function StudyOverviewTab() {
             <label htmlFor="ov-name">Name</label>
             <input
               id="ov-name"
+              type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              placeholder="Study title"
             />
           </div>
           <div className="field">
@@ -86,6 +121,7 @@ export function StudyOverviewTab() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
+              placeholder="Short description"
             />
           </div>
           <label className="field checkbox-field">
@@ -94,7 +130,21 @@ export function StudyOverviewTab() {
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
             />
-            <span>Study is active</span>
+            <span>
+              {isActive
+                ? (
+                    <>
+                      Make study active / inactive - This study is{' '}
+                      <strong>currently active</strong>. Uncheck to make it inactive.
+                    </>
+                  )
+                : (
+                    <>
+                      Make study active / inactive - This study is{' '}
+                      <strong>currently inactive</strong>. Check to make it active.
+                    </>
+                  )}
+            </span>
           </label>
           <label className="field checkbox-field">
             <input
@@ -103,12 +153,39 @@ export function StudyOverviewTab() {
               onChange={(e) => setDemographicsMandatory(e.target.checked)}
             />
             <span>
-              Require demographics for responses to count (participant sees a stronger
-              warning; skipping discards their trial data)
+              {demographicsMandatory
+                ? (
+                    <>
+                      Make demographics mandatory / optional - This study{' '}
+                      <strong>requires demographics currently</strong>. Uncheck to make them optional
+                    </>
+                  )
+                : (
+                    <>
+                      Make demographics mandatory / optional - This study{' '}
+                      <strong>doesn't require demographics currently</strong>. Check to make them mandatory
+                    </>
+                  )}
             </span>
           </label>
+          {settingsDirty && !saving && (
+            <p className="form-message form-message--warning" role="status">
+              <span className="form-warning-symbol" aria-hidden>
+                ⚠
+              </span>
+              You have unsaved changes. Click &quot;Save changes&quot; to apply.
+            </p>
+          )}
           <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? 'Saving…' : 'Save changes'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger-solid"
+            onClick={handleDeleteStudy}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting…' : 'Delete study'}
           </button>
         </form>
         {status && (

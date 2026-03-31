@@ -80,6 +80,13 @@ export function StudyWorkspaceLayout() {
         >
           {study.is_active ? 'Active' : 'Inactive'}
         </span>
+        <span
+          className={`study-badge ${study.demographics_mandatory === true ? 'study-badge--demo-req' : 'study-badge--demo-opt'}`}
+        >
+          {study.demographics_mandatory === true
+            ? 'Demographics required'
+            : 'Demographics optional'}
+        </span>
       </header>
 
       <div className="study-tabs" role="tablist">
