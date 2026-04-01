@@ -223,6 +223,18 @@
 
 ---
 
+### DELETE /admin/studies/:studyId/trials/:trialId
+
+**Description:** Delete one trial. Responses for that trial are removed (cascade). Remaining trials for the study are **renumbered** to consecutive indices `0 .. n-1` in the same order as before (by previous `trial_index`, then `created_at`, then `id`).
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": { "id": "trial uuid" } }`
+
+**Errors:** `400` invalid id, `404` study or trial not found, `401`, `500`
+
+---
+
 ### GET /admin/studies/:studyId/responses
 
 **Description:** List all trial responses for a study, with `trial_index` / `task_type` from `study_trials` and optional demographics from `participants` (when present).
@@ -257,6 +269,18 @@
 - **Non-text:** `{ "modality": "image"|"video"|"audio", "source_type": "human"|"ai", "storage_key": string, "model_name": string, "notes"?: string|null }` — `storage_key` and `model_name` required (non-empty after trim).
 
 **Response (201):** `{ "success": true, "data": { ...stimulus row } }`
+
+---
+
+### DELETE /admin/stimuli/:stimulusId
+
+**Description:** Delete a stimulus if it is **not** referenced by any `study_trials` row (`human_stimulus_id`, `ai_stimulus_id`, or `single_stimulus_id`). Otherwise returns `409`.
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": { "id": "uuid" } }`
+
+**Errors:** `400` invalid id, `404` not found, `409` in use in trials, `401`, `500`
 
 ---
 

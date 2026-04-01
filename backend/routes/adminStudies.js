@@ -195,6 +195,75 @@ router.post('/studies/:studyId/trials', requireAdminSession, async (req, res) =>
 });
 
 /**
+ * DELETE /studies/:studyId/trials/:trialId — Remove a trial, then compact trial_index to 0..n-1
+ * (same relative order as before). Responses for this trial are removed (FK cascade).
+ */
+router.delete(
+  '/studies/:studyId/trials/:trialId',
+  requireAdminSession,
+  async (req, res) => {
+    const { studyId, trialId } = req.params;
+    if (!isUuid(studyId) || !isUuid(trialId)) {
+      return res.status(400).json({ success: false, error: 'invalid id' });
+    }
+
+    const client = await db.pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      const studyCheck = await client.query(
+        'SELECT id FROM studies WHERE id = $1',
+        [studyId]
+      );
+      if (studyCheck.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ success: false, error: 'study not found' });
+      }
+
+      const del = await client.query(
+        'DELETE FROM study_trials WHERE study_id = $1 AND id = $2 RETURNING id',
+        [studyId, trialId]
+      );
+      if (del.rowCount === 0) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({ success: false, error: 'trial not found' });
+      }
+
+      await client.query(
+        `WITH ranked AS (
+           SELECT id,
+             (ROW_NUMBER() OVER (
+               ORDER BY trial_index ASC, created_at ASC, id ASC
+             ) - 1)::int AS new_idx
+           FROM study_trials
+           WHERE study_id = $1
+         )
+         UPDATE study_trials t
+         SET trial_index = ranked.new_idx, updated_at = now()
+         FROM ranked
+         WHERE t.id = ranked.id`,
+        [studyId]
+      );
+
+      await client.query('COMMIT');
+      return res.status(200).json({ success: true, data: { id: trialId } });
+    } catch (error) {
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        /* ignore */
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'failed to delete trial',
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+/**
  * GET /studies/:studyId — Get one study.
  */
 router.get('/studies/:studyId', requireAdminSession, async (req, res) => {

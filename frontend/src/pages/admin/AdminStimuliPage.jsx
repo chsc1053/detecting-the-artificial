@@ -4,8 +4,17 @@
  * Dependencies: react
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { StimulusItemCard } from '../../components/admin/StimulusItemCard.jsx'
+
+/** Auto-dismiss after this long (loading messages are excluded). */
+const FLASH_MS = { success: 4800, error: 8000, warning: 8000 }
+
+function stimulusPreviewLabel(s) {
+  if (s.text_content) return s.text_content.slice(0, 48)
+  if (s.storage_key) return s.storage_key.slice(0, 48)
+  return s.modality
+}
 
 function authHeaders() {
   const t = localStorage.getItem('adminToken')
@@ -23,7 +32,10 @@ export function AdminStimuliPage() {
   const [activeTab, setActiveTab] = useState('text')
   const [stimuli, setStimuli] = useState([])
   const [load, setLoad] = useState('idle')
-  const [status, setStatus] = useState('')
+  const [flash, setFlash] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+  const flashDismissRef = useRef(null)
+  const flashBannerRef = useRef(null)
 
   const [forms, setForms] = useState({
     text: { source_type: 'human', text_content: '' },
@@ -52,6 +64,29 @@ export function AdminStimuliPage() {
     loadStimuli()
   }, [])
 
+  useEffect(() => {
+    if (!flash || flash.kind === 'loading') return undefined
+    const ms = FLASH_MS[flash.kind] ?? 5000
+    flashDismissRef.current = window.setTimeout(() => setFlash(null), ms)
+    return () => {
+      if (flashDismissRef.current != null) {
+        window.clearTimeout(flashDismissRef.current)
+        flashDismissRef.current = null
+      }
+    }
+  }, [flash])
+
+  useEffect(() => {
+    if (!flash) return
+    const id = requestAnimationFrame(() => {
+      flashBannerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [flash])
+
   const filteredStimuli = useMemo(
     () => stimuli.filter((s) => s.modality === activeTab),
     [stimuli, activeTab]
@@ -63,7 +98,7 @@ export function AdminStimuliPage() {
 
   async function handleCreate(e) {
     e.preventDefault()
-    setStatus('Saving…')
+    setFlash({ kind: 'loading', text: 'Saving…' })
     const form = forms[activeTab]
     try {
       const body =
@@ -91,11 +126,14 @@ export function AdminStimuliPage() {
       })
       const payload = await res.json()
       if (!res.ok || !payload?.success) {
-        setStatus(payload?.error || 'Could not create stimulus')
+        setFlash({
+          kind: 'error',
+          text: payload?.error || 'Could not create stimulus',
+        })
         return
       }
 
-      setStatus('Stimulus created.')
+      setFlash({ kind: 'success', text: 'Stimulus created.' })
       // Clear only the active form
       setForms((prev) => ({
         ...prev,
@@ -118,18 +156,77 @@ export function AdminStimuliPage() {
       }))
       await loadStimuli()
     } catch {
-      setStatus('Could not reach the server')
+      setFlash({
+        kind: 'error',
+        text: 'Could not reach the server.',
+      })
     }
   }
 
   const currentForm = forms[activeTab]
 
+  async function deleteStimulus(s) {
+    const preview = stimulusPreviewLabel(s)
+    const label =
+      preview.length >= 48 ? `${preview}…` : preview || s.id.slice(0, 8)
+    if (
+      !window.confirm(
+        `Delete this ${s.modality} stimulus (${label})? This cannot be undone. It must not be used in any trial.`
+      )
+    ) {
+      return
+    }
+    setDeletingId(s.id)
+    try {
+      const res = await fetch(`/api/admin/stimuli/${s.id}`, {
+        method: 'DELETE',
+        headers: { ...authHeaders() },
+      })
+      const payload = await res.json()
+      if (!res.ok || !payload?.success) {
+        const msg = payload?.error || 'Could not delete stimulus'
+        setFlash({
+          kind: res.status === 409 ? 'warning' : 'error',
+          text: msg,
+        })
+        return
+      }
+      setFlash({ kind: 'success', text: 'Stimulus removed.' })
+      await loadStimuli()
+    } catch {
+      setFlash({
+        kind: 'error',
+        text: 'Could not reach the server.',
+      })
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="admin-stimuli-page">
       <h1 className="admin-page-title">Stimuli</h1>
       <p className="admin-page-lead">
-        Manage shared stimuli across all studies. Trials and studies can reference any stimulus from this library.
+        Manage shared stimuli across all studies. Trials reference items from this library. Delete is only allowed when no
+        trial uses a stimulus (remove it from trials first if needed).
       </p>
+
+      {flash && (
+        <div
+          ref={flashBannerRef}
+          className={`admin-flash admin-flash--${flash.kind}`}
+          role={flash.kind === 'error' ? 'alert' : 'status'}
+          aria-live={flash.kind === 'error' ? 'assertive' : 'polite'}
+        >
+          <span className="admin-flash__icon" aria-hidden>
+            {flash.kind === 'loading' && '⏳'}
+            {flash.kind === 'success' && '✓'}
+            {flash.kind === 'error' && '✕'}
+            {flash.kind === 'warning' && '⚠'}
+          </span>
+          <span className="admin-flash__text">{flash.text}</span>
+        </div>
+      )}
 
       <div className="study-tabs" role="tablist" aria-label="Stimulus modalities">
         {MODALITY_TABS.map((tab) => (
@@ -229,11 +326,14 @@ export function AdminStimuliPage() {
                 </>
               )}
 
-              <button type="submit" className="btn btn-primary">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={flash?.kind === 'loading'}
+              >
                 Create stimulus
               </button>
             </form>
-            {status && <p className="form-message">{status}</p>}
           </div>
         </section>
 
@@ -259,7 +359,11 @@ export function AdminStimuliPage() {
             <ul className="stimulus-list">
               {filteredStimuli.map((s) => (
                 <li key={s.id}>
-                  <StimulusItemCard stimulus={s} />
+                  <StimulusItemCard
+                    stimulus={s}
+                    onDelete={deleteStimulus}
+                    deleting={deletingId === s.id}
+                  />
                 </li>
               ))}
             </ul>

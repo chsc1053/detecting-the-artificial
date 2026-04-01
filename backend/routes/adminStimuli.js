@@ -1,13 +1,14 @@
 /**
  * File: routes/adminStimuli.js
- * Purpose: Admin CRUD for stimuli (MVP: text stimuli for trial wiring).
- * Dependencies: express, ../src/db, ../middleware/requireAdminSession
+ * Purpose: Admin CRUD for stimuli (library for trials).
+ * Dependencies: express, ../src/db, ../middleware/requireAdminSession, ../src/uuid
  * Related: docs/api/endpoints.md
  */
 
 const express = require('express');
 const db = require('../src/db');
 const { requireAdminSession } = require('../middleware/requireAdminSession');
+const { isUuid } = require('../src/uuid');
 
 const router = express.Router();
 
@@ -90,6 +91,47 @@ router.post('/stimuli', requireAdminSession, async (req, res) => {
     return res.status(500).json({
       success: false,
       error: 'failed to create stimulus',
+    });
+  }
+});
+
+/**
+ * DELETE /stimuli/:stimulusId — Remove a stimulus if no trial references it.
+ */
+router.delete('/stimuli/:stimulusId', requireAdminSession, async (req, res) => {
+  const { stimulusId } = req.params;
+  if (!isUuid(stimulusId)) {
+    return res.status(400).json({ success: false, error: 'invalid stimulus id' });
+  }
+
+  try {
+    const exists = await db.query('SELECT id FROM stimuli WHERE id = $1', [
+      stimulusId,
+    ]);
+    if (exists.rowCount === 0) {
+      return res.status(404).json({ success: false, error: 'stimulus not found' });
+    }
+
+    const inUse = await db.query(
+      `SELECT 1 FROM study_trials
+       WHERE human_stimulus_id = $1 OR ai_stimulus_id = $1 OR single_stimulus_id = $1
+       LIMIT 1`,
+      [stimulusId]
+    );
+    if (inUse.rowCount > 0) {
+      return res.status(409).json({
+        success: false,
+        error:
+          'stimulus is used in one or more trials; remove or change those trials first',
+      });
+    }
+
+    await db.query('DELETE FROM stimuli WHERE id = $1', [stimulusId]);
+    return res.status(200).json({ success: true, data: { id: stimulusId } });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'failed to delete stimulus',
     });
   }
 });

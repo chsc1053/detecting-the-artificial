@@ -338,6 +338,71 @@
   margin-top: 0.05rem;
 }
 
+/* Transient admin notices (auto-dismiss) */
+.admin-flash {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  scroll-margin-top: 1rem;
+}
+
+.admin-flash__icon {
+  flex-shrink: 0;
+  width: 1.35rem;
+  text-align: center;
+  line-height: 1.35;
+  font-size: 0.95rem;
+}
+
+.admin-flash__text {
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-flash--loading {
+  background: rgba(0, 128, 128, 0.08);
+  border-color: rgba(0, 128, 128, 0.22);
+  color: var(--color-text);
+}
+
+.admin-flash--success {
+  background: #ecfdf3;
+  border-color: #a6f4c5;
+  color: #027a48;
+}
+
+.admin-flash--success .admin-flash__icon {
+  color: #027a48;
+  font-weight: 800;
+}
+
+.admin-flash--error {
+  background: #fef3f2;
+  border-color: #fecdca;
+  color: #b42318;
+}
+
+.admin-flash--error .admin-flash__icon {
+  font-weight: 800;
+}
+
+.admin-flash--warning {
+  background: #fffaeb;
+  border-color: #fedf89;
+  color: #b45309;
+}
+
+.admin-flash--warning .admin-flash__icon {
+  font-weight: 700;
+}
+
 /* ——— Admin app (fixed sidebar + main) ——— */
 .admin-app {
   min-height: 100vh;
@@ -742,7 +807,18 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem 0.75rem;
+  width: 100%;
+}
+
+.trial-item-header-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  min-width: 0;
+  flex: 1;
 }
 
 .trial-index {
@@ -844,6 +920,22 @@
 .stimulus-item--missing {
   border-style: dashed;
   opacity: 0.95;
+}
+
+.stimulus-item-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+  width: 100%;
+  margin-bottom: 0.35rem;
+}
+
+.stimulus-item-header .stimulus-item-meta {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 0;
 }
 
 .stimulus-item-meta {

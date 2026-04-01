@@ -4,9 +4,12 @@
  * Dependencies: react, react-router-dom
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { StimulusItemCard } from '../../components/admin/StimulusItemCard.jsx'
+import { DeleteIcon } from '../../components/icons/DeleteIcon.jsx'
+
+const FLASH_MS = { success: 4800, error: 8000, warning: 8000 }
 
 function authHeaders() {
   const t = localStorage.getItem('adminToken')
@@ -27,7 +30,10 @@ export function StudyTrialsTab() {
   const [humanId, setHumanId] = useState('')
   const [aiId, setAiId] = useState('')
   const [singleId, setSingleId] = useState('')
-  const [trialMsg, setTrialMsg] = useState('')
+  const [flash, setFlash] = useState(null)
+  const [deletingTrialId, setDeletingTrialId] = useState(null)
+  const flashDismissRef = useRef(null)
+  const flashBannerRef = useRef(null)
 
   async function loadAll() {
     setLoad('loading')
@@ -54,9 +60,72 @@ export function StudyTrialsTab() {
     loadAll()
   }, [study.id])
 
+  useEffect(() => {
+    if (!flash || flash.kind === 'loading') return undefined
+    const ms = FLASH_MS[flash.kind] ?? 5000
+    flashDismissRef.current = window.setTimeout(() => setFlash(null), ms)
+    return () => {
+      if (flashDismissRef.current != null) {
+        window.clearTimeout(flashDismissRef.current)
+        flashDismissRef.current = null
+      }
+    }
+  }, [flash])
+
+  useEffect(() => {
+    if (!flash) return
+    const id = requestAnimationFrame(() => {
+      flashBannerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [flash])
+
+  async function deleteTrial(trial) {
+    if (
+      !window.confirm(
+        `Delete trial #${trial.trial_index}? Any responses recorded for this trial will be removed. This cannot be undone.`
+      )
+    ) {
+      return
+    }
+    setDeletingTrialId(trial.id)
+    try {
+      const res = await fetch(
+        `/api/admin/studies/${study.id}/trials/${trial.id}`,
+        {
+          method: 'DELETE',
+          headers: { ...authHeaders() },
+        }
+      )
+      const payload = await res.json()
+      if (!res.ok || !payload?.success) {
+        setFlash({
+          kind: 'error',
+          text: payload?.error || 'Could not delete trial',
+        })
+        return
+      }
+      setFlash({
+        kind: 'success',
+        text: 'Trial removed. Remaining trials were renumbered in order.',
+      })
+      await loadAll()
+    } catch {
+      setFlash({
+        kind: 'error',
+        text: 'Could not reach the server.',
+      })
+    } finally {
+      setDeletingTrialId(null)
+    }
+  }
+
   async function addTrial(e) {
     e.preventDefault()
-    setTrialMsg('Adding…')
+    setFlash({ kind: 'loading', text: 'Adding…' })
     const body =
       taskType === 'forced_choice'
         ? {
@@ -79,16 +148,22 @@ export function StudyTrialsTab() {
       })
       const payload = await res.json()
       if (!res.ok || !payload?.success) {
-        setTrialMsg(payload?.error || 'Failed')
+        setFlash({
+          kind: res.status === 409 ? 'warning' : 'error',
+          text: payload?.error || 'Could not add trial',
+        })
         return
       }
-      setTrialMsg('Trial added.')
+      setFlash({ kind: 'success', text: 'Trial added.' })
       setHumanId('')
       setAiId('')
       setSingleId('')
       await loadAll()
     } catch {
-      setTrialMsg('Network error')
+      setFlash({
+        kind: 'error',
+        text: 'Could not reach the server.',
+      })
     }
   }
 
@@ -105,8 +180,27 @@ export function StudyTrialsTab() {
       <p className="admin-page-lead">
         Build trials from stimuli you added on the{' '}
         <Link to={`/admin/studies/${study.id}/stimuli`}>Stimuli</Link> tab. Order
-        follows trial index (next index is assigned automatically).
+        follows trial index (next index is assigned automatically). Deleting a
+        trial removes its responses and renumbers the rest to stay consecutive
+        in the same order.
       </p>
+
+      {flash && (
+        <div
+          ref={flashBannerRef}
+          className={`admin-flash admin-flash--${flash.kind}`}
+          role={flash.kind === 'error' ? 'alert' : 'status'}
+          aria-live={flash.kind === 'error' ? 'assertive' : 'polite'}
+        >
+          <span className="admin-flash__icon" aria-hidden>
+            {flash.kind === 'loading' && '⏳'}
+            {flash.kind === 'success' && '✓'}
+            {flash.kind === 'error' && '✕'}
+            {flash.kind === 'warning' && '⚠'}
+          </span>
+          <span className="admin-flash__text">{flash.text}</span>
+        </div>
+      )}
 
       <section className="admin-section">
         <h2 className="admin-section-title">Add trial</h2>
@@ -184,11 +278,14 @@ export function StudyTrialsTab() {
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary">
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={flash?.kind === 'loading'}
+            >
               Add trial
             </button>
           </form>
-          {trialMsg && <p className="form-message">{trialMsg}</p>}
         </div>
       </section>
 
@@ -214,9 +311,23 @@ export function StudyTrialsTab() {
               return (
                 <li key={t.id} className="trial-item">
                   <div className="trial-item-header">
-                    <span className="trial-index">#{t.trial_index}</span>
-                    <span className="trial-type">{t.task_type}</span>
-                    <code className="ref-id ref-id--inline">{t.id}</code>
+                    <div className="trial-item-header-main">
+                      <span className="trial-index">#{t.trial_index}</span>
+                      <span className="trial-type">{t.task_type}</span>
+                      <code className="ref-id ref-id--inline">{t.id}</code>
+                    </div>
+                    <button
+                      type="button"
+                      className="study-delete-btn"
+                      onClick={() => deleteTrial(t)}
+                      disabled={deletingTrialId === t.id}
+                      aria-label={`Delete trial #${t.trial_index}`}
+                    >
+                      <DeleteIcon />
+                      <span>
+                        {deletingTrialId === t.id ? 'Deleting…' : 'Delete'}
+                      </span>
+                    </button>
                   </div>
                   {t.task_type === 'forced_choice' && (
                     <div className="trial-item-stimuli trial-stimuli-row">

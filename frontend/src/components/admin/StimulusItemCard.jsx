@@ -3,7 +3,14 @@
  * Purpose: Shared stimulus presentation — badges, full ID, text — for list and trial embeds.
  */
 
-export function StimulusItemCard({ stimulus, missingId }) {
+import { DeleteIcon } from '../icons/DeleteIcon.jsx'
+
+export function StimulusItemCard({
+  stimulus,
+  missingId,
+  onDelete,
+  deleting = false,
+}) {
   if (!stimulus) {
     return (
       <div className="stimulus-item stimulus-item--missing">
@@ -20,13 +27,33 @@ export function StimulusItemCard({ stimulus, missingId }) {
     )
   }
 
+  const meta = (
+    <div className="stimulus-item-meta">
+      <span className="study-badge study-badge--off">{stimulus.modality}</span>
+      <span className="study-badge study-badge--on">{stimulus.source_type}</span>
+      <code className="ref-id ref-id--inline">{stimulus.id}</code>
+    </div>
+  )
+
   return (
     <div className="stimulus-item stimulus-item--card">
-      <div className="stimulus-item-meta">
-        <span className="study-badge study-badge--off">{stimulus.modality}</span>
-        <span className="study-badge study-badge--on">{stimulus.source_type}</span>
-        <code className="ref-id ref-id--inline">{stimulus.id}</code>
-      </div>
+      {onDelete ? (
+        <div className="stimulus-item-header">
+          {meta}
+          <button
+            type="button"
+            className="study-delete-btn"
+            onClick={() => onDelete(stimulus)}
+            disabled={deleting}
+            aria-label={`Delete stimulus ${stimulus.id}`}
+          >
+            <DeleteIcon />
+            <span>{deleting ? 'Deleting…' : 'Delete'}</span>
+          </button>
+        </div>
+      ) : (
+        meta
+      )}
       {stimulus.text_content ? (
         <p className="stimulus-item-text">{stimulus.text_content}</p>
       ) : null}
