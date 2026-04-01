@@ -105,6 +105,7 @@ Users who access the **admin panel**. The final product is deployed by a researc
 - `id` (PK, UUID)
 - `email` (text, unique)
 - `password_hash` (text; hashed with bcrypt)
+- `last_login_at` (timestamptz, nullable) — set on each successful `POST /admin/auth/login`
 - `created_at`, `updated_at`
 
 ## How this supports analyses

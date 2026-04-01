@@ -90,11 +90,11 @@ export function AdminLayout() {
           <NavLink to="/admin" end className="admin-nav-link">
             Dashboard
           </NavLink>
-          <NavLink to="/admin/studies" className="admin-nav-link">
-            Studies
-          </NavLink>
           <NavLink to="/admin/stimuli" className="admin-nav-link">
             Stimuli
+          </NavLink>
+          <NavLink to="/admin/studies" className="admin-nav-link">
+            Studies
           </NavLink>
         </nav>
         <div className="admin-sidebar-footer">

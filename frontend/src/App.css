@@ -568,6 +568,113 @@
   width: 100%;
 }
 
+.admin-dashboard-page .admin-page-lead {
+  max-width: none;
+  width: 100%;
+}
+
+.dashboard-activity-section {
+  margin-bottom: 1.75rem;
+}
+
+.dashboard-activity-card .admin-section-title {
+  margin-top: 0;
+}
+
+.dashboard-activity-title {
+  margin-bottom: 0.35rem;
+}
+
+.dashboard-activity-detail {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.dashboard-activity-empty {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+
+.dashboard-activity-metrics {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.25rem;
+}
+
+.dashboard-activity-metrics li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.dashboard-activity-metrics strong {
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.dashboard-activity-metrics span {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.dashboard-activity-by-study {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.dashboard-activity-subheading {
+  margin: 0 0 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.dashboard-activity-study-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dashboard-activity-study-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  font-size: 0.875rem;
+}
+
+.dashboard-activity-study-link {
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.dashboard-activity-study-link:hover {
+  text-decoration: underline;
+}
+
+.dashboard-activity-study-count {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -606,52 +713,99 @@
   }
 }
 
-.dashboard-actions .dashboard-action-buttons {
+.dashboard-stat-body {
   display: flex;
+  flex-direction: row;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  gap: 1rem 1.5rem;
 }
 
-.dashboard-actions .dashboard-action-buttons a {
-  text-decoration: none;
-}
-
-.dashboard-actions .dashboard-action-buttons a:hover {
-  text-decoration: none;
-}
-
-.dashboard-hint {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--color-muted);
-  line-height: 1.45;
-}
-
-.dashboard-stat-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.dashboard-stat-total {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  align-items: flex-start;
+  gap: 0.2rem;
+  min-width: 6.5rem;
+  padding-right: 1.25rem;
+  border-right: 1px solid var(--color-border);
 }
 
-.dashboard-stat-list li {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.dashboard-stat-list strong {
-  font-size: 1.25rem;
+.dashboard-stat-total-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
   color: var(--color-text);
 }
 
-.dashboard-stat-list span {
-  font-size: 0.875rem;
+.dashboard-stat-total-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--color-muted);
+  line-height: 1.3;
+  max-width: 9rem;
+}
+
+.dashboard-stat-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem 1.25rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-stat-breakdown--studies {
+  grid-template-columns: repeat(2, auto);
+  align-content: center;
+}
+
+.dashboard-stat-breakdown--modalities {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-stat-breakdown li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.dashboard-stat-breakdown strong {
+  font-size: 1.125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.dashboard-stat-breakdown span {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+@media (max-width: 380px) {
+  .dashboard-stat-body {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-stat-total {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 0 0.85rem;
+    width: 100%;
+    max-width: none;
+  }
+
+  .dashboard-stat-total-label {
+    max-width: none;
+  }
+
+  .dashboard-stat-breakdown--modalities {
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
 }
 
 .dashboard-stat-muted,

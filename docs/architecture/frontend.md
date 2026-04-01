@@ -14,8 +14,8 @@ React (Vite) app in the `frontend/` directory. Created with `npm create vite@lat
 - **Routing**: `src/main.jsx` wraps app with `BrowserRouter`.
 - **Root component**: `src/App.jsx` defines routes — **participant**: `/` (home / study picker), `/study/:studyId` (intro → trials → demographics → results); **admin** nested under `/admin` (see [Admin panel IA](../features/admin-panel.md)).
 - **Participant UI**: `src/pages/participant/ParticipantHome.jsx`, `ParticipantStudyPage.jsx`; `src/components/participant/StimulusView.jsx` (modalities); `AutoTextarea.jsx` (auto-growing open-ended response field).
-- **Admin**: `src/pages/admin/AdminLayout.jsx` — session gate, fixed left sidebar (brand, email, Dashboard / Studies / **Stimuli**, Sign out at bottom), `<Outlet />` in main column (no top bar).
-- **Admin dashboard** (`/admin`): `AdminDashboardHome.jsx` — overview, quick actions, at-a-glance counts, recent studies.
+- **Admin**: `src/pages/admin/AdminLayout.jsx` — session gate, fixed left sidebar (brand, email, Dashboard / Stimuli / Studies, Sign out at bottom), `<Outlet />` in main column (no top bar).
+- **Admin dashboard** (`/admin`): `AdminDashboardHome.jsx` — activity since last sign-in (`GET /admin/dashboard/activity`), studies and stimuli at-a-glance, recent studies.
 - **Studies** (`/admin/studies`): `AdminStudiesPage.jsx` — create study and full list (edit/delete per row).
 - **Stimuli** (`/admin/stimuli`): `AdminStimuliPage.jsx` — global library by modality; forms for text and media URL stimuli.
 - **Study workspace** (`/admin/studies/:studyId/overview|stimuli|trials|responses`): `StudyWorkspaceLayout.jsx`, `StudyOverviewTab.jsx`, `StudyStimuliTab.jsx` (link to global Stimuli), `StudyTrialsTab.jsx`, `StudyResponsesTab.jsx`.

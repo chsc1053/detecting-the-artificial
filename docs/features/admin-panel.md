@@ -36,20 +36,17 @@ Exact paths can be adjusted; the important split is **dashboard vs studies list 
 
 ## What should appear on the admin home (`/admin`)
 
-**Purpose:** orient the researcher and surface **actions**, not duplicate the full studies list.
+**Purpose:** orient the researcher with compact **snapshots**, not duplicate full lists.
 
-Suggested content:
+Implemented / suggested content:
 
-1. **Welcome / context** — one line: “Signed in as …” (can be minimal if also in top bar).
-2. **Quick actions** (cards or buttons):
-   - **Create study** → `/admin/studies/new` or open modal.
-   - **View all studies** → `/admin/studies`.
-   - **Open analytics** → `/admin/analytics` or latest study (optional).
-3. **At a glance** (compact, not full table):
-   - **Active studies** count (and optionally inactive count).
-   - **Recent studies** (last 3–5 edited) with link to study workspace.
-   - Optional: **Responses collected** (last 7 days) when data pipeline exists.
-4. **Getting started** (empty state for first-time deployers): short checklist—create study → add trials → add stimuli → activate → share link.
+1. **Lead** — short copy with links to **Stimuli** and **Studies** in the sidebar (same order as nav).
+2. **Since your last sign-in** — from the previous `last_login_at` through now (`GET /admin/dashboard/activity`): new responses and participant sessions; active studies with new responses; median confidence; demographics capture rate; responses by study (links to **Responses**). First sign-in uses `experimenters.created_at` as the window start.
+3. **Studies at a glance** — total studies, active count, inactive count (`GET /studies`).
+4. **Stimuli at a glance** — total stimuli and counts by modality (`GET /admin/stimuli`).
+5. **Recent studies** — up to five from the public studies list (same order as API) with **Edit** to workspace; link to view all on **Studies**.
+
+Optional later: welcome line (“Signed in as …”), responses-in-7-days when analytics exist, getting-started checklist for empty deploys.
 
 **Avoid on home:** long scrollable list of every study (that belongs on **Studies**).
 
@@ -87,16 +84,16 @@ Suggested content:
 
 - **Sidebar** items (implemented order):
   1. **Dashboard** → `/admin`
-  2. **Studies** → `/admin/studies`
-  3. **Stimuli** → `/admin/stimuli`
+  2. **Stimuli** → `/admin/stimuli`
+  3. **Studies** → `/admin/studies`
   - **Analytics** / **Export** global nav items are not wired yet (see [analytics](analytics.md), [data export](data-export.md)).
 - Selecting a study from the list **navigates** to `/admin/studies/:studyId` (study workspace), not the dashboard.
 - **Login** remains `/admin/login`; unauthenticated users redirect to login for any `/admin/*` except login.
 
 ## Implementation notes (frontend)
 
-- **Done:** Nested routes with `Outlet` — `AdminLayout` wraps authenticated admin routes; sidebar **Dashboard**, **Studies**, **Stimuli** use `NavLink`.
-- **Done:** Dashboard at **`/admin`**; **Studies** at **`/admin/studies`** — create form + list with **Edit** / **Delete**; **`DELETE /admin/studies/:studyId`** removes participants then the study (cascading trials/responses).
+- **Done:** Nested routes with `Outlet` — `AdminLayout` wraps authenticated admin routes; sidebar **Dashboard**, **Stimuli**, **Studies** use `NavLink`.
+- **Done:** Dashboard at **`/admin`** — **Since your last sign-in** (`GET /admin/dashboard/activity`, window from `activity_since` in session set at login), **Studies at a glance** + **Stimuli at a glance** (side by side on wide viewports), **Recent studies**; no separate quick-action card (use sidebar). **Studies** at **`/admin/studies`** — create form + list with **Edit** / **Delete**; **`DELETE /admin/studies/:studyId`** removes participants then the study (cascading trials/responses).
 - **Done:** **Global Stimuli** at **`/admin/stimuli`** — modality tabs, create text (inline) or image/video/audio via **media URL** + source description; list with previews (`StimulusItemCard`). Study workspace **`stimuli`** tab is explanatory + link only.
 - **Done:** Study workspace **`/admin/studies/:studyId`** — `overview`, `stimuli` (link), **`trials`** (all modalities in dropdowns), **`responses`** (table + filter + CSV; `GET /admin/studies/:studyId/responses`). Backend: `GET/PATCH/DELETE /admin/studies/:id`, `GET/POST .../trials`, `GET .../responses`, `GET/POST /admin/stimuli`.
 - **Next:** S3 upload and pre-signed URLs; dedicated **Analytics** and **Export** areas/APIs; optional `/admin/studies/new`; study duplication/archival; separate **Settings** route if split from overview.

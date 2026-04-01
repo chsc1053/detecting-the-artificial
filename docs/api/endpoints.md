@@ -81,11 +81,16 @@
     "token": "session-token",
     "experimenter": {
       "id": "uuid",
-      "email": "researcher@example.com"
+      "email": "researcher@example.com",
+      "last_login_at": "2026-03-31T12:00:00.000Z",
+      "activity_since": "2026-03-30T09:15:00.000Z"
     }
   }
 }
 ```
+
+- `last_login_at` — time of **this** successful login (ISO 8601).
+- `activity_since` — **`last_login_at` from before this login** (nullable). The dashboard uses it as the start of “since your last sign-in”. On a first sign-in it is `null`.
 
 **Error Responses:**
 - `400`: Missing email/password
@@ -108,14 +113,54 @@
   "data": {
     "experimenter": {
       "id": "uuid",
-      "email": "researcher@example.com"
+      "email": "researcher@example.com",
+      "last_login_at": "2026-03-31T12:00:00.000Z",
+      "activity_since": "2026-03-30T09:15:00.000Z"
     }
   }
 }
 ```
 
+Same fields as login response for this session (including `activity_since` when present).
+
 **Error Responses:**
 - `401`: Missing/invalid token
+
+---
+
+### GET /admin/dashboard/activity
+
+**Description:** Aggregated activity for the signed-in experimenter’s **current session window**: from `activity_since` (previous `last_login_at` at login) through now. If `activity_since` was `null` at login, counts run from **`experimenters.created_at`** instead (`window_key`: `since_account_created`).
+
+**Authentication:** Bearer token.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "window_key": "since_last_login",
+    "since": "2026-03-30T09:15:00.000Z",
+    "responses_total": 12,
+    "participants_started": 4,
+    "active_studies_with_responses": 2,
+    "median_confidence": 3.5,
+    "participants_with_demographics": 3,
+    "responses_by_study": [
+      { "study_id": "uuid", "study_name": "Pilot", "response_count": 10 }
+    ]
+  }
+}
+```
+
+- `active_studies_with_responses` — distinct **active** studies that received at least one response in the window.
+- `median_confidence` — median of `responses.confidence` in the window (`null` if no responses).
+- `participants_with_demographics` — participants started in the window with at least one demographic field saved (age, location, education, or AI literacy).
+
+`window_key` is `since_last_login` or `since_account_created`. `responses_by_study` is ordered by count (max 8 rows).
+
+**Errors:** `401`, `500`
 
 ---
 

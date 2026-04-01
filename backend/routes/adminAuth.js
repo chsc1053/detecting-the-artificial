@@ -25,7 +25,7 @@ router.post('/auth/login', async (req, res) => {
 
   try {
     const result = await db.query(
-      `SELECT id, email, password_hash
+      `SELECT id, email, password_hash, last_login_at
        FROM experimenters
        WHERE lower(email) = lower($1)`,
       [email.trim()]
@@ -49,9 +49,23 @@ router.post('/auth/login', async (req, res) => {
       });
     }
 
+    /** Timestamp before this login — used for “activity since last sign-in”. */
+    const activitySince = experimenter.last_login_at;
+
+    const loginRow = await db.query(
+      `UPDATE experimenters
+       SET last_login_at = now(), updated_at = now()
+       WHERE id = $1
+       RETURNING id, email, last_login_at`,
+      [experimenter.id]
+    );
+    const row = loginRow.rows[0];
+
     const token = createSession({
-      id: experimenter.id,
-      email: experimenter.email,
+      id: row.id,
+      email: row.email,
+      last_login_at: row.last_login_at,
+      activity_since: activitySince,
     });
 
     return res.status(200).json({
@@ -59,8 +73,10 @@ router.post('/auth/login', async (req, res) => {
       data: {
         token,
         experimenter: {
-          id: experimenter.id,
-          email: experimenter.email,
+          id: row.id,
+          email: row.email,
+          last_login_at: row.last_login_at,
+          activity_since: activitySince,
         },
       },
     });
