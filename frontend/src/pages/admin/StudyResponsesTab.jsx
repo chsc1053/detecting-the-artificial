@@ -33,7 +33,7 @@ function formatWhen(iso) {
 function correctLabel(v) {
   if (v === true) return 'Yes'
   if (v === false) return 'No'
-  return '—'
+  return 'Unscored'
 }
 
 function escapeCsvCell(s) {
@@ -227,6 +227,12 @@ export function StudyResponsesTab() {
         )}
         {load === 'ok' && filtered.length > 0 && (
           <div className="admin-panel-card admin-table-wrap">
+            {rows.some((r) => r.is_correct == null) && (
+              <p className="responses-unscored-hint">
+                Red rows could not be scored (e.g. missing stimulus ground truth).
+                They are excluded from global Analytics.
+              </p>
+            )}
             <table className="admin-data-table">
               <thead>
                 <tr>
@@ -246,7 +252,12 @@ export function StudyResponsesTab() {
               </thead>
               <tbody>
                 {filtered.map((r) => (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    className={
+                      r.is_correct == null ? 'responses-row-unscored' : undefined
+                    }
+                  >
                     <td>{formatWhen(r.created_at)}</td>
                     <td>
                       <code className="admin-mono-clip" title={r.participant_id}>

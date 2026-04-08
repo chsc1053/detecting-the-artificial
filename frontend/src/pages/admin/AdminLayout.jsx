@@ -96,6 +96,9 @@ export function AdminLayout() {
           <NavLink to="/admin/studies" className="admin-nav-link">
             Studies
           </NavLink>
+          <NavLink to="/admin/analytics" className="admin-nav-link">
+            Analytics
+          </NavLink>
         </nav>
         <div className="admin-sidebar-footer">
           <button type="button" className="btn btn-ghost" onClick={signOut}>

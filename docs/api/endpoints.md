@@ -164,6 +164,62 @@ Same fields as login response for this session (including `activity_since` when 
 
 ---
 
+### GET /admin/analytics
+
+**Description:** Analytics over **all studies** or **one study**. Optional time filter on **`responses.created_at`**. Only rows with **`is_correct` NOT NULL** (scored correct/incorrect) are included; unscored responses are omitted.
+
+**Authentication:** Bearer token.
+
+**Query:**
+
+- `from` and `to` — ISO 8601 timestamps (optional). Omit both for **all time**.
+- `study_id` — UUID of a study (optional). Omit or empty for **all studies**. Invalid UUID → **400** `invalid study id`. Unknown id → **404** `study not found`.
+
+**Response (200):** `{ success, data }` with **range** (`from`, `to`, `all_time`), **filter** (`study_id`, `all_studies`), plus:
+
+- **summary** — `response_count`, `participant_count`, `study_count`, `trial_count`, `avg_confidence`, `median_confidence`, `correct_count`, `incorrect_count` (scored responses only)
+- **by_study**, **by_task_type**, **by_modality** — aggregate counts and (where noted) avg confidence per slice
+- **by_modality_task_type** — per modality × task type: counts + **accuracy_pct**
+- **by_modality_task_type_confidence** — per modality × task type: **mean_confidence**
+- **confusion_matrix_by_modality** — per core modality (`text` / `image` / `audio` / `video`): AI vs human ground truth × response counts (`true_ai_pred_ai`, etc.) and **n**
+- **demographics_participants_by_education**, **demographics_participants_by_ai_exposure** — participant counts per bucket
+- **demographics_participants_omitted_count** — participants with responses in range but no demographics saved
+- **demographics_accuracy_by_education_modality**, **demographics_accuracy_by_ai_exposure_modality** — accuracy-style breakdowns × modality
+- **demographics_confidence_by_education_modality**, **demographics_confidence_by_ai_exposure_modality** — mean confidence × modality
+- **demographics_accuracy_confidence_by_age** — per age: response counts, correct/incorrect, mean confidence
+- **by_confidence** — histogram `confidence` → `count`
+- **by_education**, **by_ai_literacy** — response-level aggregates by demographic bucket
+- **demographics_coverage** — `response_with_participant`, `responses_linked_to_any_demographic`
+
+**Errors:** `400`, `401`, `404`, `500`
+
+---
+
+### GET /admin/analytics/performance
+
+**Description:** **Performance** metrics for the same filters as `GET /admin/analytics`: scored responses only, optional **`from` / `to`**, optional **`study_id`**.
+
+**Authentication:** Bearer token.
+
+**Query:** Same as `GET /admin/analytics` (`from`, `to`, `study_id`).
+
+**Response (200):** `{ success, data: { range, filter, n_scored, overall_accuracy_pct, forced_choice_accuracy_pct, single_item_accuracy_pct, mean_confidence, confidence_accuracy_correlation, d_prime, sdt, scatter_rows, confidence_box_by_outcome, accuracy_heatmap_task_modality } }`
+
+- **overall_accuracy_pct** / **forced_choice_accuracy_pct** / **single_item_accuracy_pct** — integers 0–100 or `null` when undefined (e.g. no responses of that task type).
+- **mean_confidence** — mean rating 1–5, 3 decimal places, or `null`.
+- **confidence_accuracy_correlation** — point-biserial *r*, 4 decimal places, or `null`.
+- **d_prime** — SDT sensitivity (standard normal), 4 decimal places, or `null` when not computable (e.g. no human-target trials for FA).
+- **sdt** — `hits`, `misses`, `false_alarms`, `correct_rejections`, `n_signal`, `n_noise`, `hit_rate`, `false_alarm_rate` (rates 4 decimals or `null`).
+- **scatter_rows** — per-response points: `response_id`, `participant_id`, `confidence`, `is_correct`, `modality`.
+- **confidence_box_by_outcome** — `{ correct, incorrect }` each with box stats (`n`, `min`, `q1`, `median`, `q3`, `max`) or `null` when empty.
+- **accuracy_heatmap_task_modality** — rows: `task_type`, `modality`, `n_scored`, `n_correct`, `n_incorrect`, `accuracy_pct`.
+
+*d′* uses **jStat** `normal.inv` on hit and false-alarm rates after a **0.5/n** bound away from 0 and 1.
+
+**Errors:** `400`, `401`, `404`, `500`
+
+---
+
 ### POST /admin/studies
 
 **Description:** Create a new study (experimenter only).

@@ -18,6 +18,7 @@ import { StudyTrialsTab } from './pages/admin/StudyTrialsTab.jsx'
 import { StudyStimuliTab } from './pages/admin/StudyStimuliTab.jsx'
 import { AdminStimuliPage } from './pages/admin/AdminStimuliPage.jsx'
 import { StudyResponsesTab } from './pages/admin/StudyResponsesTab.jsx'
+import { AdminAnalyticsPage } from './pages/admin/AdminAnalyticsPage.jsx'
 import { ParticipantHome } from './pages/participant/ParticipantHome.jsx'
 import { ParticipantStudyPage } from './pages/participant/ParticipantStudyPage.jsx'
 import { useState, useEffect } from 'react'
@@ -117,6 +118,7 @@ function App() {
         <Route index element={<AdminDashboardHome />} />
         <Route path="studies" element={<AdminStudiesPage />} />
         <Route path="stimuli" element={<AdminStimuliPage />} />
+        <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="studies/:studyId" element={<StudyWorkspaceLayout />}>
           <Route index element={<StudyWorkspaceIndexRedirect />} />
           <Route path="overview" element={<StudyOverviewTab />} />

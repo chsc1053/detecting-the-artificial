@@ -19,6 +19,7 @@ Single **experimenter / admin** surface: authenticated, used to configure studie
 | Path | Purpose |
 |------|---------|
 | `/admin` | **Admin home** (dashboard) |
+| `/admin/analytics` | **Global analytics** — cross-study metrics, Recharts dashboards (overview, performance, modalities, demographics) |
 | `/admin/studies` | **Studies list** — browse/search all studies; create new study |
 | `/admin/studies/new` | **Create study** (or modal from list; route optional) |
 | `/admin/stimuli` | **Global stimulus library** — create and list stimuli (all modalities); reused across studies |
@@ -86,17 +87,19 @@ Optional later: welcome line (“Signed in as …”), responses-in-7-days when 
   1. **Dashboard** → `/admin`
   2. **Stimuli** → `/admin/stimuli`
   3. **Studies** → `/admin/studies`
-  - **Analytics** / **Export** global nav items are not wired yet (see [analytics](analytics.md), [data export](data-export.md)).
+  4. **Analytics** → `/admin/analytics`
+  - **Export** global nav is not wired yet (see [data export](data-export.md)).
 - Selecting a study from the list **navigates** to `/admin/studies/:studyId` (study workspace), not the dashboard.
 - **Login** remains `/admin/login`; unauthenticated users redirect to login for any `/admin/*` except login.
 
 ## Implementation notes (frontend)
 
-- **Done:** Nested routes with `Outlet` — `AdminLayout` wraps authenticated admin routes; sidebar **Dashboard**, **Stimuli**, **Studies** use `NavLink`.
+- **Done:** Nested routes with `Outlet` — `AdminLayout` wraps authenticated admin routes; sidebar **Dashboard**, **Stimuli**, **Studies**, **Analytics** use `NavLink`.
 - **Done:** Dashboard at **`/admin`** — **Since your last sign-in** (`GET /admin/dashboard/activity`, window from `activity_since` in session set at login), **Studies at a glance** + **Stimuli at a glance** (side by side on wide viewports), **Recent studies**; no separate quick-action card (use sidebar). **Studies** at **`/admin/studies`** — create form + list with **Edit** / **Delete**; **`DELETE /admin/studies/:studyId`** removes participants then the study (cascading trials/responses).
 - **Done:** **Global Stimuli** at **`/admin/stimuli`** — modality tabs, create text (inline) or image/video/audio via **media URL** + source description; list with previews (`StimulusItemCard`). Study workspace **`stimuli`** tab is explanatory + link only.
 - **Done:** Study workspace **`/admin/studies/:studyId`** — `overview`, `stimuli` (link), **`trials`** (all modalities in dropdowns), **`responses`** (table + filter + CSV; `GET /admin/studies/:studyId/responses`). Backend: `GET/PATCH/DELETE /admin/studies/:id`, `GET/POST .../trials`, `GET .../responses`, `GET/POST /admin/stimuli`.
-- **Next:** S3 upload and pre-signed URLs; dedicated **Analytics** and **Export** areas/APIs; optional `/admin/studies/new`; study duplication/archival; separate **Settings** route if split from overview.
+- **Done:** **Analytics** at **`/admin/analytics`** — `GET /admin/analytics` + `GET /admin/analytics/performance`; all-time or custom date range; **Overview**, **Performance**, **Modalities**, and **Demographics** tabs with Recharts (see [analytics](analytics.md)). **Responses** tab labels unscored rows and notes they are excluded from global analytics.
+- **Next:** S3 upload and pre-signed URLs; **Export** hub/APIs; optional `/admin/studies/new`; study duplication/archival; separate **Settings** route if split from overview.
 
 ## Related
 
