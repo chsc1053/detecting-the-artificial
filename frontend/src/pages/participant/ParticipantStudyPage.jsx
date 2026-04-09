@@ -3,7 +3,7 @@
  * Purpose: Participant flow — intro, trials, demographics, results (per product spec).
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { StimulusView } from '../../components/participant/StimulusView.jsx'
 import { AutoTextarea } from '../../components/participant/AutoTextarea.jsx'
@@ -16,6 +16,11 @@ const DEMO_SECURITY_NOTICE =
 
 const DEMO_MANDATORY_WARNING =
   'To include your trial responses in the study results, please complete the demographics fields. If you skip, you can still view the feedback in the next page, but your answers won’t be counted toward the research.'
+
+function stimulusIsImageOrVideo(stimulus) {
+  const m = stimulus?.modality
+  return m === 'image' || m === 'video'
+}
 
 /** 1–5 scale with short verbal labels for the confidence dropdown */
 const CONFIDENCE_OPTIONS = [
@@ -44,6 +49,7 @@ export function ParticipantStudyPage() {
   const [demoLocation, setDemoLocation] = useState('')
   const [demoEdu, setDemoEdu] = useState('')
   const [demoAi, setDemoAi] = useState('')
+  const forcedChoiceGridRef = useRef(null)
 
   const mandatory = intro?.demographics_mandatory === true
 
@@ -346,6 +352,14 @@ export function ParticipantStudyPage() {
 
   if (step === 'survey' && currentTrial) {
     const fc = currentTrial.task_type === 'forced_choice'
+    const showCompareFullscreen =
+      stimulusIsImageOrVideo(currentTrial.stimuli.human) &&
+      stimulusIsImageOrVideo(currentTrial.stimuli.ai)
+    const openForcedChoiceFullscreen = () => {
+      const el = forcedChoiceGridRef.current
+      if (!el || typeof el.requestFullscreen !== 'function') return
+      el.requestFullscreen().catch(() => {})
+    }
     return (
       <div className="app-shell app-shell--public">
         <main className="public-page participant-flow">
@@ -357,21 +371,32 @@ export function ParticipantStudyPage() {
               <p className="participant-task-prompt">
                 Which content is <strong>AI-generated</strong>? (tap a card)
               </p>
-              <div className="participant-fc-grid">
-                <button
-                  type="button"
-                  className={`participant-choice-tile ${choice === 'human' ? 'participant-choice-tile--selected' : ''}`}
-                  onClick={() => setChoice('human')}
-                >
-                  <StimulusView stimulus={currentTrial.stimuli.human} label="Option A" />
-                </button>
-                <button
-                  type="button"
-                  className={`participant-choice-tile ${choice === 'ai' ? 'participant-choice-tile--selected' : ''}`}
-                  onClick={() => setChoice('ai')}
-                >
-                  <StimulusView stimulus={currentTrial.stimuli.ai} label="Option B" />
-                </button>
+              <div className="participant-fc-wrap">
+                <div className="participant-fc-grid" ref={forcedChoiceGridRef}>
+                  <button
+                    type="button"
+                    className={`participant-choice-tile ${choice === 'human' ? 'participant-choice-tile--selected' : ''}`}
+                    onClick={() => setChoice('human')}
+                  >
+                    <StimulusView stimulus={currentTrial.stimuli.human} />
+                  </button>
+                  <button
+                    type="button"
+                    className={`participant-choice-tile ${choice === 'ai' ? 'participant-choice-tile--selected' : ''}`}
+                    onClick={() => setChoice('ai')}
+                  >
+                    <StimulusView stimulus={currentTrial.stimuli.ai} />
+                  </button>
+                </div>
+                {showCompareFullscreen ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary participant-fc-fullscreen-btn"
+                    onClick={openForcedChoiceFullscreen}
+                  >
+                    Compare in fullscreen
+                  </button>
+                ) : null}
               </div>
             </>
           ) : (
