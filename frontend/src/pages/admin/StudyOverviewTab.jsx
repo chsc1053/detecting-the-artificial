@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 
 function authHeaders() {
   const t = localStorage.getItem('adminToken')
@@ -100,6 +100,12 @@ export function StudyOverviewTab() {
       <p className="admin-page-lead">
         Basic study metadata. Add stimuli under Stimuli, then build trials under
         Trials.
+      </p>
+      <p className="dashboard-stat-muted study-overview-analytics-hint">
+        <Link to={`/admin/analytics?study_id=${study.id}`}>
+          Open Analytics for this study
+        </Link>{' '}
+        (charts use the same page; this link sets study scope for you.)
       </p>
       <div className="admin-panel-card">
         <form className="form-stack" onSubmit={handleSubmit}>

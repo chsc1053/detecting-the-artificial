@@ -90,9 +90,10 @@
 ```
 
 - `last_login_at` — time of **this** successful login (ISO 8601).
-- `activity_since` — **`last_login_at` from before this login** (nullable). The dashboard uses it as the start of “since your last sign-in”. On a first sign-in it is `null`.
+- `activity_since` — `last_login_at` from before this login (nullable). The dashboard uses it as the start of “since your last sign-in”. On a first sign-in it is `null`.
 
 **Error Responses:**
+
 - `400`: Missing email/password
 - `401`: Invalid credentials
 - `500`: Login failed
@@ -124,13 +125,14 @@
 Same fields as login response for this session (including `activity_since` when present).
 
 **Error Responses:**
+
 - `401`: Missing/invalid token
 
 ---
 
 ### GET /admin/dashboard/activity
 
-**Description:** Aggregated activity for the signed-in experimenter’s **current session window**: from `activity_since` (previous `last_login_at` at login) through now. If `activity_since` was `null` at login, counts run from **`experimenters.created_at`** instead (`window_key`: `since_account_created`).
+**Description:** Aggregated activity for the signed-in experimenter’s **current session window**: from `activity_since` (previous `last_login_at` at login) through now. If `activity_since` was `null` at login, counts run from `experimenters.created_at` instead (`window_key`: `since_account_created`).
 
 **Authentication:** Bearer token.
 
@@ -166,7 +168,7 @@ Same fields as login response for this session (including `activity_since` when 
 
 ### GET /admin/analytics
 
-**Description:** Analytics over **all studies** or **one study**. Optional time filter on **`responses.created_at`**. Only rows with **`is_correct` NOT NULL** (scored correct/incorrect) are included; unscored responses are omitted.
+**Description:** Analytics over **all studies** or **one study**. Optional time filter on `responses.created_at`. Only rows with `is_correct` NOT NULL (scored correct/incorrect) are included; unscored responses are omitted.
 
 **Authentication:** Bearer token.
 
@@ -193,11 +195,13 @@ Same fields as login response for this session (including `activity_since` when 
 
 **Errors:** `400`, `401`, `404`, `500`
 
+**Related (no extra route):** **Analytics print / PDF** is generated in the browser from `/admin/analytics` (print stylesheet only; same query params as on-screen filters). See [data export](../features/data-export.md).
+
 ---
 
 ### GET /admin/analytics/performance
 
-**Description:** **Performance** metrics for the same filters as `GET /admin/analytics`: scored responses only, optional **`from` / `to`**, optional **`study_id`**.
+**Description:** **Performance** metrics for the same filters as `GET /admin/analytics`: scored responses only, optional `from` / `to`, optional `study_id`.
 
 **Authentication:** Bearer token.
 
@@ -255,6 +259,7 @@ Same fields as login response for this session (including `activity_since` when 
 ```
 
 **Error Responses:**
+
 - `400`: Missing or invalid `name`
 - `401`: Missing/invalid token
 - `500`: Failed to create study
@@ -360,7 +365,7 @@ Same fields as login response for this session (including `activity_since` when 
 
 ### POST /admin/stimuli
 
-**Description:** Create a stimulus. Text uses inline `text_content`. Image, video, and audio require a **media URL or key** in `storage_key` (participant UI treats `http`/`https` values as embeddable URLs) and a non-empty **`model_name`** (source / model description). `notes` is optional.
+**Description:** Create a stimulus. Text uses inline `text_content`. Image, video, and audio require a **media URL or key** in `storage_key` (participant UI treats `http`/`https` values as embeddable URLs) and a non-empty `model_name` (source / model description). `notes` is optional.
 
 **Authentication:** Bearer token.
 
@@ -459,10 +464,10 @@ Base path: `/participant` (e.g. dev: `http://localhost:3000/participant/...`).
 
 ## Planned Endpoints
 
-- **Stimuli**: authenticated upload to S3; issue pre-signed URLs for delivery (today, non-text stimuli use a URL or opaque key in `storage_key`; participants only auto-render media when `storage_key` is `http`/`https`).
-- **Admin panel**: dedicated export API and analytics endpoints beyond the per-study responses CSV produced in the UI.
+- **Stimuli**: authenticated upload to S3; issue pre-signed URLs for delivery (see [stimulus delivery](../features/stimulus-delivery.md); participant UI accepts several URL shapes today).
 
 ## Related
 
 - [Backend architecture](../architecture/backend.md)
 - [Response collection](../features/response-collection.md)
+

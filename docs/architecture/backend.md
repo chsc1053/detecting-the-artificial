@@ -16,7 +16,7 @@ Node.js + Express REST API in the `backend/` directory. Initialized with `npm in
 - **Middleware**: `middleware/requireAdminSession.js` — Bearer token check for admin routes.
 - **Session storage (MVP)**: `src/adminSessions.js` keeps in-memory bearer token sessions for local development.
 - **Migrations**: `migrations/` managed via `node-pg-migrate` scripts in `backend/package.json`.
-- **Planned**: persist auth sessions (or JWT), export, analytics endpoints; participant media URLs from S3 as needed.
+- **Planned**: persist auth sessions (or JWT); participant media via S3 / pre-signed URLs when AWS is wired.
 
 ## Conventions
 
@@ -29,3 +29,4 @@ Node.js + Express REST API in the `backend/` directory. Initialized with `npm in
 - [API Endpoints](../api/endpoints.md)
 - [Database](database.md)
 - [Database migrations](../deployment/database-migrations.md)
+

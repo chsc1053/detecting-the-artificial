@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   ResponsiveContainer,
   BarChart,
@@ -204,6 +205,17 @@ const HEATMAP_TASK_COLS = [
   { key: 'forced_choice', label: 'Forced choice' },
   { key: 'single_item', label: 'Single item' },
 ]
+
+const ANALYTICS_TAB_PRINT_LABEL = {
+  overview: 'Overview',
+  performance: 'Performance',
+  modalities: 'Modalities',
+  demographics: 'Demographics',
+}
+
+const ANALYTICS_PROJECT_TITLE = 'Detecting the Artificial'
+const ANALYTICS_PROJECT_REPO_URL =
+  'https://github.com/chsc1053/detecting-the-artificial'
 
 function heatmapAccuracyCellStyle(accuracyPct) {
   if (accuracyPct == null || Number.isNaN(accuracyPct)) {
@@ -1024,6 +1036,54 @@ function ModalityConfusionMatricesBlock({ matrices }) {
   )
 }
 
+function AnalyticsPrintFooter() {
+  return (
+    <footer className="analytics-print-footer" aria-hidden="true">
+      <div className="analytics-print-footer__inner">
+        <div className="analytics-print-footer__brand">
+          <svg
+            className="analytics-print-footer__icon"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            aria-hidden
+            focusable="false"
+          >
+            <path
+              fill="currentColor"
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"
+            />
+          </svg>
+          <span className="analytics-print-footer__title">
+            {ANALYTICS_PROJECT_TITLE}
+          </span>
+        </div>
+        <a
+          className="analytics-print-footer__link"
+          href={ANALYTICS_PROJECT_REPO_URL}
+        >
+          <svg
+            className="analytics-print-footer__icon analytics-print-footer__icon--github"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            aria-hidden
+            focusable="false"
+          >
+            <path
+              fill="currentColor"
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.06-.02-2.08-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.08-.74.09-.72.09-.72 1.2.08 1.83 1.23 1.83 1.23 1.07 1.83 2.81 1.3 3.5 1 .1-.78.42-1.31.76-1.61-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 5.94 0c2.28-1.55 3.29-1.23 3.29-1.23.66 1.65.24 2.87.12 3.17.77.84 1.23 1.91 1.23 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.22.69.83.57A12 12 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+            />
+          </svg>
+          <span className="analytics-print-footer__url">
+            github.com/chsc1053/detecting-the-artificial
+          </span>
+        </a>
+      </div>
+    </footer>
+  )
+}
+
 function EmptyAnalyticsMessage({ studyName }) {
   return (
     <div className="admin-panel-card analytics-empty-card">
@@ -1048,6 +1108,7 @@ function EmptyAnalyticsMessage({ studyName }) {
 }
 
 export function AdminAnalyticsPage() {
+  const [searchParams] = useSearchParams()
   const [rangeMode, setRangeMode] = useState('all')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
@@ -1101,6 +1162,14 @@ export function AdminAnalyticsPage() {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (studiesLoad !== 'ok') return
+    const sid = searchParams.get('study_id')
+    if (!sid) return
+    if (!studiesList.some((s) => s.id === sid)) return
+    setAppliedStudyId(sid)
+  }, [studiesLoad, studiesList, searchParams])
 
   const selectedStudyName = useMemo(() => {
     if (!appliedStudyId) return null
@@ -1800,8 +1869,7 @@ export function AdminAnalyticsPage() {
     <div className="admin-analytics-page">
       <h1 className="admin-page-title">Analytics</h1>
       <p className="admin-page-lead">
-        Explore participation, accuracy, confidence, and related trends for your
-        studies.
+        Explore participation, accuracy, confidence, and related trends.
       </p>
 
       <div className="admin-panel-card analytics-filters-card">
@@ -1819,7 +1887,9 @@ export function AdminAnalyticsPage() {
           )}
           {studiesLoad === 'ok' && (
             <div className="field analytics-scope-field">
-              <label htmlFor="analytics-study-scope">Include responses from</label>
+              <label htmlFor="analytics-study-scope">
+                Include responses from (all studies or one study)
+              </label>
               <select
                 id="analytics-study-scope"
                 value={appliedStudyId ?? ''}
@@ -1899,23 +1969,58 @@ export function AdminAnalyticsPage() {
 
       {load === 'ok' && data && (
         <>
-          <div className="analytics-tabs" role="tablist" aria-label="Analytics sections">
-            {['overview', 'performance', 'modalities', 'demographics'].map((id) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                aria-selected={tab === id}
-                className={`analytics-tab ${tab === id ? 'analytics-tab--active' : ''}`}
-                onClick={() => setTab(id)}
-              >
-                {id === 'overview' && 'Overview'}
-                {id === 'performance' && 'Performance'}
-                {id === 'modalities' && 'Modalities'}
-                {id === 'demographics' && 'Demographics'}
-              </button>
-            ))}
+          <div className="analytics-tab-bar">
+            <div className="analytics-tabs" role="tablist" aria-label="Analytics sections">
+              {['overview', 'performance', 'modalities', 'demographics'].map((id) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === id}
+                  className={`analytics-tab ${tab === id ? 'analytics-tab--active' : ''}`}
+                  onClick={() => setTab(id)}
+                >
+                  {id === 'overview' && 'Overview'}
+                  {id === 'performance' && 'Performance'}
+                  {id === 'modalities' && 'Modalities'}
+                  {id === 'demographics' && 'Demographics'}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary analytics-print-btn"
+              onClick={() => window.print()}
+            >
+              Print / PDF
+            </button>
           </div>
+
+          <header className="analytics-print-header">
+            <h2 className="analytics-print-heading">Analytics</h2>
+            <p className="analytics-print-meta">
+              Study:{' '}
+              {appliedStudyId == null
+                ? 'All studies'
+                : selectedStudyName || '—'}
+            </p>
+            {rangeMode === 'custom' && appliedFrom && appliedTo ? (
+              <p className="analytics-print-meta">
+                Date range:{' '}
+                {appliedFrom.toLocaleDateString(undefined, {
+                  dateStyle: 'medium',
+                })}{' '}
+                –{' '}
+                {appliedTo.toLocaleDateString(undefined, {
+                  dateStyle: 'medium',
+                })}{' '}
+                (local calendar days)
+              </p>
+            ) : null}
+            <p className="analytics-print-meta">
+              Tab: {ANALYTICS_TAB_PRINT_LABEL[tab] ?? tab}
+            </p>
+          </header>
 
           {tab === 'overview' && (
             <div className="analytics-tab-panel">
@@ -3503,6 +3608,8 @@ export function AdminAnalyticsPage() {
               )}
             </div>
           )}
+
+          <AnalyticsPrintFooter />
         </>
       )}
     </div>

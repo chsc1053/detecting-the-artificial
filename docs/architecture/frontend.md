@@ -18,14 +18,14 @@ React (Vite) app in the `frontend/` directory. Created with `npm create vite@lat
 - **Admin dashboard** (`/admin`): `AdminDashboardHome.jsx` — activity since last sign-in (`GET /admin/dashboard/activity`), studies and stimuli at-a-glance, recent studies.
 - **Studies** (`/admin/studies`): `AdminStudiesPage.jsx` — create study and full list (edit/delete per row).
 - **Stimuli** (`/admin/stimuli`): `AdminStimuliPage.jsx` — global library by modality; forms for text and media URL stimuli.
-- **Analytics** (`/admin/analytics`): `AdminAnalyticsPage.jsx` — global metrics and Recharts (Overview, Performance, Modalities, Demographics tabs); `GET /admin/analytics` and `GET /admin/analytics/performance`.
+- **Analytics** (`/admin/analytics`): `AdminAnalyticsPage.jsx` — Recharts (Overview, Performance, Modalities, Demographics); **Study scope** for all studies or one study; optional `?study_id=` pre-select; `GET /admin/analytics` and `GET /admin/analytics/performance`. **Print / PDF** via `window.print()` and `@media print` rules in `App.css` (see [data export](../features/data-export.md)).
 - **Study workspace** (`/admin/studies/:studyId/overview|stimuli|trials|responses`): `StudyWorkspaceLayout.jsx`, `StudyOverviewTab.jsx`, `StudyStimuliTab.jsx` (link to global Stimuli), `StudyTrialsTab.jsx`, `StudyResponsesTab.jsx`.
 - **Config**: `vite.config.js` — dev server proxies `/api` to the backend (see [local-setup](../deployment/local-setup.md)); `eslint.config.js`.
 - **UI**: Global tokens and typography in `src/index.css` (light theme, teal accent); page and admin layouts in `src/App.css`; **Instrument Sans** from Google Fonts (`index.html`). Shared admin stimulus row: `src/components/admin/StimulusItemCard.jsx` (stimuli list + trial embeds).
 
 ## Planned / not yet routed
 
-- **Admin**: global **Analytics** and **Export** routes (see [admin panel IA](../features/admin-panel.md)); persistent auth beyond in-memory MVP tokens if needed.
+- **Admin**: persistent auth beyond in-memory MVP tokens if needed (see [admin panel IA](../features/admin-panel.md)).
 - State management: local state where possible; lift state when shared across routes or components.
 
 ## Related

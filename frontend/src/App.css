@@ -850,6 +850,11 @@
   width: 100%;
 }
 
+.study-overview-analytics-hint {
+  margin-top: -0.25rem;
+  margin-bottom: 1rem;
+}
+
 .breadcrumb {
   font-size: 0.875rem;
   color: var(--color-muted);
@@ -2423,6 +2428,21 @@
   line-height: 1.45;
 }
 
+.analytics-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.analytics-tab-bar .analytics-tabs {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 0;
+}
+
 .analytics-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -2456,6 +2476,181 @@
 
 .analytics-tab-panel {
   margin-bottom: 2rem;
+}
+
+.analytics-print-header {
+  display: none;
+}
+
+@media print {
+  @page {
+    margin: 1.2cm;
+  }
+
+  .admin-sidebar {
+    display: none !important;
+  }
+
+  .admin-app {
+    display: block !important;
+  }
+
+  .admin-main-column {
+    width: 100% !important;
+    max-width: none !important;
+    /* Screen layout reserves space for fixed sidebar; remove for print or content shifts right. */
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .admin-body {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .admin-analytics-page > .admin-page-title,
+  .admin-analytics-page > .admin-page-lead,
+  .admin-analytics-page > .analytics-filters-card,
+  .admin-analytics-page > .analytics-tab-bar,
+  .admin-analytics-page > .dashboard-stat-muted,
+  .admin-analytics-page > .dashboard-stat-error {
+    display: none !important;
+  }
+
+  /*
+   * Browsers omit background fills in print unless forced; applies to heatmap cells,
+   * confusion matrix tints, legend swatches, and CSS gradients (e.g. heatmap scale).
+   */
+  .admin-analytics-page,
+  .admin-analytics-page * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .admin-analytics-page .analytics-print-header {
+    display: block !important;
+    margin: 0 0 1rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid #ccc;
+    break-inside: avoid;
+    break-after: avoid-page;
+    page-break-after: avoid;
+  }
+
+  .analytics-print-heading {
+    margin: 0 0 0.4rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #101828;
+  }
+
+  .analytics-print-meta {
+    margin: 0.15rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: #101828;
+  }
+
+  .admin-analytics-page .analytics-tab-panel {
+    margin-bottom: 0;
+  }
+
+  /* Keep section headings with the visualization that follows. */
+  .admin-analytics-page .analytics-chart-title,
+  .admin-analytics-page .admin-section-title,
+  .admin-analytics-page .analytics-confusion-matrix-title {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .admin-analytics-page .analytics-chart-sub {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Keep each card / matrix / KPI tile intact when it fits on one page. */
+  .admin-analytics-page .admin-panel-card,
+  .admin-analytics-page .analytics-kpi,
+  .admin-analytics-page .analytics-confusion-matrix-card {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border-color: #d0d5dd !important;
+  }
+
+  .admin-analytics-page .analytics-heatmap-wrap {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .admin-analytics-page .recharts-responsive-container {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .analytics-print-footer {
+    display: flex !important;
+    justify-content: center;
+    margin-top: 1.75rem;
+    padding-top: 1rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .analytics-print-footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem 1.75rem;
+    width: 100%;
+    max-width: 36rem;
+    padding: 0.75rem 1.1rem;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    background: #f2f4f7;
+    color: #344054;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  .analytics-print-footer__brand,
+  .analytics-print-footer__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .analytics-print-footer__title {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #101828;
+  }
+
+  .analytics-print-footer__link {
+    color: #175cd3;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .analytics-print-footer__icon {
+    flex-shrink: 0;
+    color: #475467;
+  }
+
+  .analytics-print-footer__icon--github {
+    color: #101828;
+  }
+
+  .analytics-print-footer__url {
+    word-break: break-all;
+  }
+}
+
+.analytics-print-footer {
+  display: none;
 }
 
 .analytics-overview-note {
