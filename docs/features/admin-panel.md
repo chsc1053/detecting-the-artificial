@@ -59,7 +59,7 @@ Optional later: welcome line (“Signed in as …”), responses-in-7-days when 
   - **Overview** — short description, status, demographics flag, activate/deactivate, **delete study** (with confirmation), links to deeper tabs.
   - **Stimuli** — in-app pointer to the **global** Stimuli page (`/admin/stimuli`); all create/edit happens there.
   - **Trials** — ordered list; add/remove; forced-choice vs single-item; pick stimuli from the global library (all modalities).
-  - **Responses** — live data from `GET /admin/studies/:studyId/responses`; filter by trial; **Download CSV** (only server-backed response export).
+  - **Responses** — live data from `GET /admin/studies/:studyId/responses`; filter by trial; **Download CSV**; **Delete invalid responses** (incomplete sessions + missing demographics when mandatory); **Delete all responses** (clears participants too). Needed before adding trials or turning on mandatory demographics if data already exists; Analytics returns `409` until invalid mixing is removed.
   - **Overview** — study metadata and demographics flag; link to **Analytics** scoped to this study (`/admin/analytics?study_id=…`).
 
 ### Analytics (`/admin/analytics`)

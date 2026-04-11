@@ -193,7 +193,9 @@ Same fields as login response for this session (including `activity_since` when 
 - **by_education**, **by_ai_literacy** — response-level aggregates by demographic bucket
 - **demographics_coverage** — `response_with_participant`, `responses_linked_to_any_demographic`
 
-**Errors:** `400`, `401`, `404`, `500`
+**Errors:** `400`, `401`, `404`, `409`, `500`
+
+**Conflict:** `409` with `code: "analytics_data_integrity"` when the filtered slice includes a scored response from a participant who **did not complete every trial** in their study, or (for a study with `demographics_mandatory`) a participant with **no demographic fields** saved. The UI directs experimenters to **Delete invalid responses** on the affected study’s Responses tab.
 
 **Related (no extra route):** **Analytics print / PDF** is generated in the browser from `/admin/analytics` (print stylesheet only; same query params as on-screen filters). See [data export](../features/data-export.md).
 
@@ -220,7 +222,7 @@ Same fields as login response for this session (including `activity_since` when 
 
 *d′* uses **jStat** `normal.inv` on hit and false-alarm rates after a **0.5/n** bound away from 0 and 1.
 
-**Errors:** `400`, `401`, `404`, `500`
+**Errors:** `400`, `401`, `404`, `409`, `500` — same `analytics_data_integrity` `409` as `GET /admin/analytics`.
 
 ---
 
@@ -288,6 +290,8 @@ Same fields as login response for this session (including `activity_since` when 
 
 **Response (200):** `{ "success": true, "data": { ...updated study } }`
 
+**Conflict:** `409` with `code: "study_has_responses"` when the body sets `demographics_mandatory` from `false` to `true` while the study already has any `responses` rows. The experimenter must clear responses (see **DELETE** routes below) before requiring demographics.
+
 ---
 
 ### DELETE /admin/studies/:studyId
@@ -325,7 +329,11 @@ Same fields as login response for this session (including `activity_since` when 
 
 **Response (201):** `{ "success": true, "data": { ...trial row } }`
 
-**Error Responses:** `400`, `404`, `409` duplicate `trial_index`, `401`, `500`
+**Error Responses:** `400`, `404`, `401`, `500`
+
+**Conflict:** `409` with `code: "study_has_responses"` when the study already has any `responses` rows (adding a trial would make existing sessions incomplete relative to the new trial list). Clear responses on the study **Responses** tab first.
+
+**Other:** `409` duplicate `trial_index` when `trial_index` collides.
 
 ---
 
@@ -350,6 +358,33 @@ Same fields as login response for this session (including `activity_since` when 
 **Response (200):** `{ "success": true, "data": [ { id, study_id, trial_id, participant_id, choice_label, confidence, explanation, is_correct, created_at, trial_index, task_type, age, approx_location, education_level, ai_literacy } ] }`
 
 **Errors:** `400` invalid study id, `404` study not found, `401` / `403` if not authenticated.
+
+---
+
+### DELETE /admin/studies/:studyId/responses
+
+**Description:** Delete **all** `responses` rows for the study, then **all** `participants` rows for that study. Use before adding trials or turning on mandatory demographics when the study already had data.
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": { "responses_deleted": number, "participants_deleted": number } }`
+
+**Errors:** `400` invalid study id, `404` study not found, `401`, `500`
+
+---
+
+### DELETE /admin/studies/:studyId/responses/invalid
+
+**Description:** Delete responses (and then the participant rows) for participants who are **invalid** for analytics:
+
+- **Incomplete session:** fewer distinct `trial_id` values in `responses` than the number of `study_trials` for that study (participant did not answer every trial).
+- **Missing demographics:** study has `demographics_mandatory = true` and the participant row has no demographic fields saved (same “any demographic” rule as analytics coverage: `age`, or non-blank `approx_location`, or `education_level`, or `ai_literacy`).
+
+**Authentication:** Bearer token.
+
+**Response (200):** `{ "success": true, "data": { "responses_deleted": number, "participants_deleted": number, "participant_ids": uuid[] } }` — `participant_ids` lists removed participants (may be empty if nothing matched).
+
+**Errors:** `400` invalid study id, `404` study not found, `401`, `500`
 
 ---
 

@@ -50,6 +50,75 @@ function parseStudyIdParam(raw) {
   return { studyId: s };
 }
 
+/**
+ * True when a participant in the analytics slice (scored responses matching filters)
+ * is structurally invalid: fewer trials answered than the study defines, or
+ * demographics mandatory but no demographic fields saved (same predicate as coverage).
+ */
+async function analyticsSliceHasInvalidParticipants(fromTs, toTs, studyId) {
+  const { sql: dateSql, params: dateParams } = responseFilterClause(
+    fromTs,
+    toTs,
+    studyId,
+    1
+  );
+  const q = `
+    WITH visible AS (
+      SELECT DISTINCT r.study_id, r.participant_id
+      FROM responses r
+      WHERE 1=1 ${dateSql}
+    ),
+    trial_n AS (
+      SELECT study_id, COUNT(*)::int AS n FROM study_trials GROUP BY study_id
+    ),
+    answered AS (
+      SELECT study_id, participant_id, COUNT(DISTINCT trial_id)::int AS na
+      FROM responses
+      GROUP BY study_id, participant_id
+    ),
+    incomplete AS (
+      SELECT a.study_id, a.participant_id
+      FROM answered a
+      INNER JOIN trial_n t ON t.study_id = a.study_id
+      WHERE t.n > 0 AND a.na < t.n
+    ),
+    bad_demo AS (
+      SELECT p.study_id, p.id AS participant_id
+      FROM participants p
+      INNER JOIN studies s ON s.id = p.study_id
+      WHERE s.demographics_mandatory = true
+        AND NOT (
+          p.age IS NOT NULL
+          OR (
+            p.approx_location IS NOT NULL
+            AND TRIM(p.approx_location) <> ''
+          )
+          OR p.education_level IS NOT NULL
+          OR p.ai_literacy IS NOT NULL
+        )
+        AND EXISTS (
+          SELECT 1 FROM responses r2
+          WHERE r2.participant_id = p.id AND r2.study_id = p.study_id
+        )
+    ),
+    invalid AS (
+      SELECT study_id, participant_id FROM incomplete
+      UNION
+      SELECT study_id, participant_id FROM bad_demo
+    )
+    SELECT 1 AS hit
+    FROM visible v
+    INNER JOIN invalid i
+      ON i.study_id = v.study_id AND i.participant_id = v.participant_id
+    LIMIT 1
+  `;
+  const r = await db.query(q, dateParams);
+  return r.rowCount > 0;
+}
+
+const ANALYTICS_INTEGRITY_MESSAGE =
+  'Analytics cannot mix complete sessions with incomplete ones, or (for studies that require demographics) sessions that never saved demographics. On each affected study’s Responses tab, use Delete invalid responses, then reload Analytics.';
+
 async function assertStudyExists(studyId) {
   if (!studyId) return null;
   const r = await db.query('SELECT id FROM studies WHERE id = $1', [studyId]);
@@ -164,6 +233,14 @@ router.get('/analytics/performance', requireAdminSession, async (req, res) => {
       studyId,
       1
     );
+
+    if (await analyticsSliceHasInvalidParticipants(fromTs, toTs, studyId)) {
+      return res.status(409).json({
+        success: false,
+        code: 'analytics_data_integrity',
+        error: ANALYTICS_INTEGRITY_MESSAGE,
+      });
+    }
 
     const perfResult = await db.query(
       `WITH base AS (
@@ -391,6 +468,14 @@ router.get('/analytics', requireAdminSession, async (req, res) => {
       studyId,
       1
     );
+
+    if (await analyticsSliceHasInvalidParticipants(fromTs, toTs, studyId)) {
+      return res.status(409).json({
+        success: false,
+        code: 'analytics_data_integrity',
+        error: ANALYTICS_INTEGRITY_MESSAGE,
+      });
+    }
 
     const summaryResult = await db.query(
       `SELECT

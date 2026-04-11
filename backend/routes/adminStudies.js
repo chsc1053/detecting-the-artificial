@@ -17,6 +17,14 @@ async function studyExists(studyId) {
   return r.rowCount > 0;
 }
 
+async function studyHasAnyResponses(studyId) {
+  const r = await db.query(
+    'SELECT EXISTS(SELECT 1 FROM responses WHERE study_id = $1) AS e',
+    [studyId]
+  );
+  return Boolean(r.rows[0]?.e);
+}
+
 /**
  * POST /studies — Create a study (experimenter only).
  */
@@ -142,6 +150,15 @@ router.post('/studies/:studyId/trials', requireAdminSession, async (req, res) =>
   try {
     if (!(await studyExists(studyId))) {
       return res.status(404).json({ success: false, error: 'study not found' });
+    }
+
+    if (await studyHasAnyResponses(studyId)) {
+      return res.status(409).json({
+        success: false,
+        code: 'study_has_responses',
+        error:
+          'Cannot add a trial while this study has responses. On the Responses tab, use Delete all responses, then add trials.',
+      });
     }
 
     let nextIndex;
@@ -346,6 +363,30 @@ router.patch('/studies/:studyId', requireAdminSession, async (req, res) => {
     });
   }
 
+  if (demographics_mandatory === true) {
+    try {
+      const cur = await db.query(
+        'SELECT demographics_mandatory FROM studies WHERE id = $1',
+        [studyId]
+      );
+      if (cur.rowCount > 0 && cur.rows[0].demographics_mandatory === false) {
+        if (await studyHasAnyResponses(studyId)) {
+          return res.status(409).json({
+            success: false,
+            code: 'study_has_responses',
+            error:
+              'Cannot turn on mandatory demographics while this study has responses. On the Responses tab, use Delete all responses, then change this setting.',
+          });
+        }
+      }
+    } catch (e) {
+      return res.status(500).json({
+        success: false,
+        error: 'failed to validate study update',
+      });
+    }
+  }
+
   sets.push('updated_at = now()');
   vals.push(studyId);
 
@@ -445,5 +486,173 @@ router.get('/studies/:studyId/responses', requireAdminSession, async (req, res) 
     });
   }
 });
+
+/**
+ * DELETE /studies/:studyId/responses — Remove every response and participant for this study.
+ */
+router.delete(
+  '/studies/:studyId/responses',
+  requireAdminSession,
+  async (req, res) => {
+    const { studyId } = req.params;
+    if (!isUuid(studyId)) {
+      return res.status(400).json({ success: false, error: 'invalid study id' });
+    }
+
+    const client = await db.pool.connect();
+    try {
+      if (!(await studyExists(studyId))) {
+        return res.status(404).json({ success: false, error: 'study not found' });
+      }
+
+      await client.query('BEGIN');
+      const delR = await client.query(
+        'DELETE FROM responses WHERE study_id = $1',
+        [studyId]
+      );
+      const delP = await client.query(
+        'DELETE FROM participants WHERE study_id = $1',
+        [studyId]
+      );
+      await client.query('COMMIT');
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          responses_deleted: delR.rowCount,
+          participants_deleted: delP.rowCount,
+        },
+      });
+    } catch (error) {
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        /* ignore */
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'failed to delete responses',
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+/**
+ * DELETE /studies/:studyId/responses/invalid — Remove incomplete sessions and
+ * sessions without demographics when demographics are mandatory.
+ */
+router.delete(
+  '/studies/:studyId/responses/invalid',
+  requireAdminSession,
+  async (req, res) => {
+    const { studyId } = req.params;
+    if (!isUuid(studyId)) {
+      return res.status(400).json({ success: false, error: 'invalid study id' });
+    }
+
+    const client = await db.pool.connect();
+    try {
+      if (!(await studyExists(studyId))) {
+        return res.status(404).json({ success: false, error: 'study not found' });
+      }
+
+      await client.query('BEGIN');
+
+      const pickInvalid = await client.query(
+        `WITH trial_n AS (
+           SELECT COUNT(*)::int AS n FROM study_trials WHERE study_id = $1
+         ),
+         answered AS (
+           SELECT participant_id, COUNT(DISTINCT trial_id)::int AS na
+           FROM responses
+           WHERE study_id = $1
+           GROUP BY participant_id
+         ),
+         incomplete AS (
+           SELECT a.participant_id
+           FROM answered a
+           CROSS JOIN trial_n t
+           WHERE t.n > 0 AND a.na < t.n
+         ),
+         bad_demo AS (
+           SELECT p.id AS participant_id
+           FROM participants p
+           INNER JOIN studies s ON s.id = p.study_id
+           WHERE p.study_id = $1
+             AND s.demographics_mandatory = true
+             AND NOT (
+               p.age IS NOT NULL
+               OR (
+                 p.approx_location IS NOT NULL
+                 AND TRIM(p.approx_location) <> ''
+               )
+               OR p.education_level IS NOT NULL
+               OR p.ai_literacy IS NOT NULL
+             )
+             AND EXISTS (
+               SELECT 1 FROM responses r
+               WHERE r.participant_id = p.id AND r.study_id = p.study_id
+             )
+         ),
+         invalid_ids AS (
+           SELECT participant_id FROM incomplete
+           UNION
+           SELECT participant_id FROM bad_demo
+         )
+         SELECT participant_id FROM invalid_ids`,
+        [studyId]
+      );
+
+      const ids = pickInvalid.rows.map((row) => row.participant_id);
+      if (ids.length === 0) {
+        await client.query('COMMIT');
+        return res.status(200).json({
+          success: true,
+          data: {
+            responses_deleted: 0,
+            participants_deleted: 0,
+            participant_ids: [],
+          },
+        });
+      }
+
+      const delR = await client.query(
+        `DELETE FROM responses
+         WHERE study_id = $1 AND participant_id = ANY($2::uuid[])`,
+        [studyId, ids]
+      );
+      const delP = await client.query(
+        `DELETE FROM participants
+         WHERE study_id = $1 AND id = ANY($2::uuid[])`,
+        [studyId, ids]
+      );
+
+      await client.query('COMMIT');
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          responses_deleted: delR.rowCount,
+          participants_deleted: delP.rowCount,
+          participant_ids: ids,
+        },
+      });
+    } catch (error) {
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        /* ignore */
+      }
+      return res.status(500).json({
+        success: false,
+        error: 'failed to delete invalid responses',
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
 
 module.exports = router;

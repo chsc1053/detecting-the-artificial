@@ -1273,6 +1273,22 @@
   box-sizing: border-box;
 }
 
+.analytics-integrity-block {
+  padding: 1rem 1.25rem;
+}
+
+.analytics-integrity-block__actions {
+  margin: 0.75rem 0 0;
+}
+
+.analytics-integrity-block__actions .btn {
+  text-decoration: none;
+}
+
+.analytics-integrity-block__actions .btn:hover {
+  text-decoration: none;
+}
+
 .responses-tab-actions .btn.btn-secondary {
   height: 2.375rem;
   min-height: 2.375rem;

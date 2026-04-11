@@ -5,8 +5,10 @@
  * Related: docs/api/endpoints.md
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
+
+const FLASH_MS = { success: 4800, error: 8000 }
 
 function authHeaders() {
   const t = localStorage.getItem('adminToken')
@@ -88,6 +90,10 @@ export function StudyResponsesTab() {
   const [load, setLoad] = useState('loading')
   const [error, setError] = useState(null)
   const [trialFilter, setTrialFilter] = useState('all')
+  const [purgeBusy, setPurgeBusy] = useState(null)
+  const [flash, setFlash] = useState(null)
+  const flashDismissRef = useRef(null)
+  const flashBannerRef = useRef(null)
 
   const loadResponses = useCallback(async () => {
     setLoad('loading')
@@ -115,6 +121,29 @@ export function StudyResponsesTab() {
   useEffect(() => {
     loadResponses()
   }, [loadResponses])
+
+  useEffect(() => {
+    if (!flash || flash.kind === 'loading') return undefined
+    const ms = FLASH_MS[flash.kind] ?? 5000
+    flashDismissRef.current = window.setTimeout(() => setFlash(null), ms)
+    return () => {
+      if (flashDismissRef.current != null) {
+        window.clearTimeout(flashDismissRef.current)
+        flashDismissRef.current = null
+      }
+    }
+  }, [flash])
+
+  useEffect(() => {
+    if (!flash) return undefined
+    const id = requestAnimationFrame(() => {
+      flashBannerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [flash])
 
   const trialOptions = useMemo(() => {
     const set = new Set()
@@ -150,12 +179,104 @@ export function StudyResponsesTab() {
     URL.revokeObjectURL(url)
   }
 
+  async function deleteAllResponses() {
+    if (
+      !window.confirm(
+        `Delete ALL responses and every participant session for “${study.name}”? This cannot be undone.`
+      )
+    ) {
+      return
+    }
+    setPurgeBusy('all')
+    setFlash(null)
+    try {
+      const res = await fetch(`/api/admin/studies/${study.id}/responses`, {
+        method: 'DELETE',
+        headers: { ...authHeaders() },
+      })
+      const payload = await res.json()
+      if (!res.ok || !payload?.success) {
+        setFlash({
+          kind: 'error',
+          text: payload?.error || 'Could not delete responses.',
+        })
+        setPurgeBusy(null)
+        return
+      }
+      const d = payload.data ?? {}
+      setFlash({
+        kind: 'success',
+        text: `Removed ${d.responses_deleted ?? 0} response(s) and ${d.participants_deleted ?? 0} participant session(s).`,
+      })
+      setPurgeBusy(null)
+      await loadResponses()
+    } catch {
+      setFlash({ kind: 'error', text: 'Network error.' })
+      setPurgeBusy(null)
+    }
+  }
+
+  async function deleteInvalidResponses() {
+    if (
+      !window.confirm(
+        'Delete invalid sessions: participants who did not answer every trial in this study, and participants who have trial data but no demographics saved (if demographics are mandatory)? This cannot be undone.'
+      )
+    ) {
+      return
+    }
+    setPurgeBusy('invalid')
+    setFlash(null)
+    try {
+      const res = await fetch(
+        `/api/admin/studies/${study.id}/responses/invalid`,
+        {
+          method: 'DELETE',
+          headers: { ...authHeaders() },
+        }
+      )
+      const payload = await res.json()
+      if (!res.ok || !payload?.success) {
+        setFlash({
+          kind: 'error',
+          text: payload?.error || 'Could not delete invalid responses.',
+        })
+        setPurgeBusy(null)
+        return
+      }
+      const d = payload.data ?? {}
+      setFlash({
+        kind: 'success',
+        text: `Removed ${d.responses_deleted ?? 0} response row(s) and ${d.participants_deleted ?? 0} participant session(s).`,
+      })
+      setPurgeBusy(null)
+      await loadResponses()
+    } catch {
+      setFlash({ kind: 'error', text: 'Network error.' })
+      setPurgeBusy(null)
+    }
+  }
+
   return (
     <div>
       <p className="admin-page-lead">
         Trial-level responses recorded for <strong>{study.name}</strong>. Each row is one
         answer; the same participant may appear on multiple rows.
       </p>
+
+      {flash ? (
+        <div
+          ref={flashBannerRef}
+          className={`admin-flash admin-flash--${flash.kind}`}
+          role={flash.kind === 'error' ? 'alert' : 'status'}
+          aria-live={flash.kind === 'error' ? 'assertive' : 'polite'}
+        >
+          <span className="admin-flash__icon" aria-hidden>
+            {flash.kind === 'success' && '✓'}
+            {flash.kind === 'error' && '✕'}
+          </span>
+          <span className="admin-flash__text">{flash.text}</span>
+        </div>
+      ) : null}
 
       <section className="admin-section">
         <div className="responses-tab-toolbar">
@@ -207,6 +328,22 @@ export function StudyResponsesTab() {
               disabled={load !== 'ok' || filtered.length === 0}
             >
               Download CSV
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={() => deleteInvalidResponses()}
+              disabled={load !== 'ok' || purgeBusy != null}
+            >
+              {purgeBusy === 'invalid' ? 'Deleting…' : 'Delete invalid responses'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger-solid"
+              onClick={() => deleteAllResponses()}
+              disabled={load !== 'ok' || purgeBusy != null}
+            >
+              {purgeBusy === 'all' ? 'Deleting…' : 'Delete all responses'}
             </button>
           </div>
         </div>

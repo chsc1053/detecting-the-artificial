@@ -4,8 +4,13 @@
  * Dependencies: react, react-router-dom
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useOutletContext } from 'react-router-dom'
+
+const FLASH_MS = { warning: 8000 }
+
+const MANDATORY_DEMOGRAPHICS_CONFLICT_MESSAGE =
+  'Cannot turn on mandatory demographics while this study has responses. On the Responses tab, use Delete all responses, then change this setting.'
 
 function authHeaders() {
   const t = localStorage.getItem('adminToken')
@@ -22,8 +27,11 @@ export function StudyOverviewTab() {
     study.demographics_mandatory === true
   )
   const [status, setStatus] = useState('')
+  const [flash, setFlash] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const flashDismissRef = useRef(null)
+  const flashBannerRef = useRef(null)
 
   const settingsDirty =
     name !== study.name ||
@@ -38,10 +46,34 @@ export function StudyOverviewTab() {
     setDemographicsMandatory(study.demographics_mandatory === true)
   }, [study])
 
+  useEffect(() => {
+    if (!flash || flash.kind === 'loading') return undefined
+    const ms = FLASH_MS[flash.kind] ?? 5000
+    flashDismissRef.current = window.setTimeout(() => setFlash(null), ms)
+    return () => {
+      if (flashDismissRef.current != null) {
+        window.clearTimeout(flashDismissRef.current)
+        flashDismissRef.current = null
+      }
+    }
+  }, [flash])
+
+  useEffect(() => {
+    if (!flash) return undefined
+    const id = requestAnimationFrame(() => {
+      flashBannerRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    })
+    return () => cancelAnimationFrame(id)
+  }, [flash])
+
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
     setStatus('')
+    setFlash(null)
     try {
       const res = await fetch(`/api/admin/studies/${study.id}`, {
         method: 'PATCH',
@@ -58,10 +90,19 @@ export function StudyOverviewTab() {
       })
       const payload = await res.json()
       if (!res.ok || !payload?.success) {
-        setStatus(payload?.error || 'Save failed')
+        if (res.status === 409 && payload?.code === 'study_has_responses') {
+          setDemographicsMandatory(study.demographics_mandatory === true)
+          setFlash({
+            kind: 'warning',
+            text: MANDATORY_DEMOGRAPHICS_CONFLICT_MESSAGE,
+          })
+        } else {
+          setStatus(payload?.error || 'Save failed')
+        }
         setSaving(false)
         return
       }
+      setFlash(null)
       setStatus('Saved.')
       await reloadStudy()
     } catch {
@@ -107,6 +148,21 @@ export function StudyOverviewTab() {
         </Link>{' '}
         (charts use the same page; this link sets study scope for you.)
       </p>
+
+      {flash ? (
+        <div
+          ref={flashBannerRef}
+          className={`admin-flash admin-flash--${flash.kind}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="admin-flash__icon" aria-hidden>
+            {flash.kind === 'warning' ? '⚠' : null}
+          </span>
+          <span className="admin-flash__text">{flash.text}</span>
+        </div>
+      ) : null}
+
       <div className="admin-panel-card">
         <form className="form-stack" onSubmit={handleSubmit}>
           <div className="field">
@@ -194,11 +250,11 @@ export function StudyOverviewTab() {
             {deleting ? 'Deleting…' : 'Delete study'}
           </button>
         </form>
-        {status && (
+        {status ? (
           <p className="form-message" style={{ marginTop: '1rem' }}>
             {status}
           </p>
-        )}
+        ) : null}
       </div>
     </div>
   )

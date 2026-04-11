@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useId, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ResponsiveContainer,
   BarChart,
@@ -1119,6 +1119,8 @@ export function AdminAnalyticsPage() {
   const [load, setLoad] = useState('idle')
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
+  const [analyticsIntegrityBlocked, setAnalyticsIntegrityBlocked] =
+    useState(false)
 
   const [performanceLoad, setPerformanceLoad] = useState('idle')
   const [performanceData, setPerformanceData] = useState(null)
@@ -1217,6 +1219,7 @@ export function AdminAnalyticsPage() {
   const fetchOverview = useCallback(async () => {
     setLoad('loading')
     setError('')
+    setAnalyticsIntegrityBlocked(false)
     try {
       const res = await fetch(`/api/admin/analytics${queryString}`, {
         headers: { ...authHeaders() },
@@ -1225,6 +1228,13 @@ export function AdminAnalyticsPage() {
       if (res.status === 404) {
         setData(null)
         setError(payload?.error || 'Study not found')
+        setLoad('error')
+        return
+      }
+      if (res.status === 409 && payload?.code === 'analytics_data_integrity') {
+        setData(null)
+        setError(payload?.error || 'Data integrity conflict')
+        setAnalyticsIntegrityBlocked(true)
         setLoad('error')
         return
       }
@@ -1255,6 +1265,16 @@ export function AdminAnalyticsPage() {
       if (res.status === 404) {
         setPerformanceData(null)
         setPerformanceError(payload?.error || 'Study not found')
+        setPerformanceLoad('error')
+        return
+      }
+      if (res.status === 409 && payload?.code === 'analytics_data_integrity') {
+        setData(null)
+        setPerformanceData(null)
+        setError(payload?.error || 'Data integrity conflict')
+        setPerformanceError(payload?.error || 'Data integrity conflict')
+        setAnalyticsIntegrityBlocked(true)
+        setLoad('error')
         setPerformanceLoad('error')
         return
       }
@@ -1953,7 +1973,9 @@ export function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {error && <p className="form-message form-message--error">{error}</p>}
+        {error && !(load === 'error' && !data) ? (
+          <p className="dashboard-stat-error">{error}</p>
+        ) : null}
 
         <p className="analytics-filters-status" aria-live="polite">
           {filtersStatusText}
@@ -1964,7 +1986,19 @@ export function AdminAnalyticsPage() {
         <p className="dashboard-stat-muted">Loading analytics…</p>
       )}
       {load === 'error' && !data && (
-        <p className="dashboard-stat-error">{error || 'Load failed'}</p>
+        <div className="admin-panel-card analytics-integrity-block">
+          <p className="dashboard-stat-error">{error || 'Load failed'}</p>
+          {analyticsIntegrityBlocked && appliedStudyId ? (
+            <p className="analytics-integrity-block__actions">
+              <Link
+                className="btn btn-secondary"
+                to={`/admin/studies/${appliedStudyId}/responses`}
+              >
+                Open Responses for this study
+              </Link>
+            </p>
+          ) : null}
+        </div>
       )}
 
       {load === 'ok' && data && (
