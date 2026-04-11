@@ -93,7 +93,7 @@ Never commit `.env` or real secrets; use `.env.example` as a template.
 4. Build: `npm run build`; preview: `npm run preview`.
 5. Admin routes: open `http://localhost:5173/admin/login` and sign in with your experimenter credentials.
 
-**Dev proxy:** In development, requests from the frontend to `/api/*` are proxied to the backend (see `frontend/vite.config.js`). So the app calls e.g. `fetch('/api/health')`; Vite forwards to `http://localhost:3000/health`. Run the backend while developing the frontend so the "Backend: connected" status shows.
+**Dev proxy:** In development, requests from the frontend to `/api/*` are proxied to the backend (see `frontend/vite.config.js`). For example, `fetch('/api/participant/active-studies')` is forwarded to the backend. Run the backend while developing the frontend so participant and admin API calls succeed.
 
 ## Related
 

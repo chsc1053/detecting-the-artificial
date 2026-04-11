@@ -1,6 +1,6 @@
 # API Endpoints
 
-(To be updated as endpoints are added.)
+Reference for HTTP routes implemented by the backend.
 
 ## Conventions
 
@@ -329,11 +329,9 @@ Same fields as login response for this session (including `activity_since` when 
 
 **Response (201):** `{ "success": true, "data": { ...trial row } }`
 
-**Error Responses:** `400`, `404`, `401`, `500`
+**Error Responses:** `400`, `404`, `401`, `409`, `500`
 
-**Conflict:** `409` with `code: "study_has_responses"` when the study already has any `responses` rows (adding a trial would make existing sessions incomplete relative to the new trial list). Clear responses on the study **Responses** tab first.
-
-**Other:** `409` duplicate `trial_index` when `trial_index` collides.
+**Conflict (`409`):** `code: "study_has_responses"` when the study already has any `responses` rows (clear them on the **Responses** tab before adding a trial). Also `409` when `trial_index` duplicates an existing index for that study.
 
 ---
 

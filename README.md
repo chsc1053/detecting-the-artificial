@@ -1,6 +1,6 @@
 # Detecting the Artificial
 
-A cloud-native web platform for conducting multimodal human–AI detection studies. This system enables researchers to systematically evaluate human perceptual ability to distinguish AI-generated content from human-created content across text, image, video, and audio modalities.
+A cloud-native web platform for conducting multimodal human-AI detection studies. This system enables researchers to systematically evaluate human perceptual ability to distinguish AI-generated content from human-created content across text, image, video, and audio modalities.
 
 ## Overview
 
@@ -26,4 +26,4 @@ As generative AI models become increasingly sophisticated, understanding human p
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License  -  see [LICENSE](LICENSE) for details.

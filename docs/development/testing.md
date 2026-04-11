@@ -1,6 +1,6 @@
 # Testing Guidelines
 
-(To be filled when tests are introduced.)
+There is no automated test suite in this repository yet.
 
 ## Planned Scope
 

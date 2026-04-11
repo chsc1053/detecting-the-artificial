@@ -21,7 +21,7 @@ import { StudyResponsesTab } from './pages/admin/StudyResponsesTab.jsx'
 import { AdminAnalyticsPage } from './pages/admin/AdminAnalyticsPage.jsx'
 import { ParticipantHome } from './pages/participant/ParticipantHome.jsx'
 import { ParticipantStudyPage } from './pages/participant/ParticipantStudyPage.jsx'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import './App.css'
 
 function AdminLogin() {

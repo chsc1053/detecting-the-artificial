@@ -24,6 +24,8 @@ export default defineConfig([
     },
     rules: {
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
+      // Data loading on mount (fetch in useEffect) is standard; the rule flags it.
+      'react-hooks/set-state-in-effect': 'off',
     },
   },
 ])

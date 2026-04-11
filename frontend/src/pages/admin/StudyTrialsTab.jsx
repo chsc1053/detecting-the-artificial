@@ -58,6 +58,7 @@ export function StudyTrialsTab() {
 
   useEffect(() => {
     loadAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- study.id only
   }, [study.id])
 
   useEffect(() => {

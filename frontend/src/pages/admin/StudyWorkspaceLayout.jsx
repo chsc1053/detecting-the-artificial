@@ -5,6 +5,13 @@
  * Related: docs/features/admin-panel.md
  */
 
+/**
+ * File: pages/admin/StudyWorkspaceLayout.jsx
+ * Purpose: Study workspace shell — header, tabs, loads study for child routes.
+ * Dependencies: react, react-router-dom
+ * Related: docs/features/admin-panel.md
+ */
+
 import { useState, useEffect } from 'react'
 import { Link, NavLink, Navigate, Outlet, useParams } from 'react-router-dom'
 
@@ -44,6 +51,7 @@ export function StudyWorkspaceLayout() {
 
   useEffect(() => {
     reloadStudy()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- studyId only
   }, [studyId])
 
   if (load === 'loading') {

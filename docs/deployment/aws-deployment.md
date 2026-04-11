@@ -1,6 +1,6 @@
 # AWS Deployment
 
-(To be filled when deploying to AWS.)
+Step-by-step production deployment is not documented in this repository yet. The target stack is outlined below.
 
 ## Planned Stack
 

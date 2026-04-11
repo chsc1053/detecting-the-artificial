@@ -10,7 +10,7 @@
 
 **What is printed**
 
-- A compact **print header**: title “Analytics”, **study scope** (all studies or the selected study name), **custom date range** when that mode is applied, and the **active tab** name (Overview, Performance, Modalities, Demographics).
+- A compact **print header**: title "Analytics", **study scope** (all studies or the selected study name), **custom date range** when that mode is applied, and the **active tab** name (Overview, Performance, Modalities, Demographics).
 - The **current tab’s content only** (charts, tables, KPIs, legends for that tab). Hidden in print: sidebar, filters card, tab bar, page chrome, and the on-screen analytics title/lead.
 
 **Print styling (implementation)**

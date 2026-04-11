@@ -1,6 +1,6 @@
 # CI/CD Pipeline
 
-(To be filled when GitHub Actions are added.)
+No GitHub Actions workflows are checked in yet. The intended direction is as follows.
 
 ## Planned Scope
 
