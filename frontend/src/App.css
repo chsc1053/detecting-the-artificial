@@ -46,43 +46,6 @@
   font-size: 1.0625rem;
 }
 
-.status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.375rem 0.875rem;
-  border-radius: 999px;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-}
-
-.status-pill--ok::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #12b76a;
-}
-
-.status-pill--bad::before {
-  content: '';
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #f04438;
-}
-
-.public-footer {
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border);
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-}
-
 /* ——— Cards & forms ——— */
 .card {
   width: 100%;

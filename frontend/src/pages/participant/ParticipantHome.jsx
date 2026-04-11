@@ -7,17 +7,9 @@ import { useState, useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 
 export function ParticipantHome() {
-  const [backendStatus, setBackendStatus] = useState('checking')
   const [studies, setStudies] = useState(null)
   const [load, setLoad] = useState('loading')
   const [error, setError] = useState(null)
-
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data) => setBackendStatus(data?.success ? 'connected' : 'error'))
-      .catch(() => setBackendStatus('unreachable'))
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -46,8 +38,6 @@ export function ParticipantHome() {
     }
   }, [])
 
-  const ok = backendStatus === 'connected'
-
   if (load === 'ok' && studies?.length === 1) {
     return <Navigate to={`/study/${studies[0].id}`} replace />
   }
@@ -59,11 +49,6 @@ export function ParticipantHome() {
         <p className="tagline">
           Multimodal human–AI detection studies for research.
         </p>
-        <div
-          className={`status-pill ${ok ? 'status-pill--ok' : 'status-pill--bad'}`}
-        >
-          API {backendStatus === 'checking' ? '…' : ok ? 'connected' : 'unavailable'}
-        </div>
 
         {load === 'loading' && (
           <p className="participant-home-status">Loading studies…</p>
@@ -98,10 +83,6 @@ export function ParticipantHome() {
             </ul>
           </section>
         )}
-
-        <footer className="public-footer">
-          <Link to="/admin/login">Experimenter / admin sign in</Link>
-        </footer>
       </main>
     </div>
   )
