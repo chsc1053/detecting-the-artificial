@@ -1,7 +1,7 @@
 /**
  * File: routes/adminStimuli.js
  * Purpose: Admin CRUD for stimuli (library for trials).
- * Dependencies: express, ../src/db, ../middleware/requireAdminSession, ../src/uuid
+ * Dependencies: express, ../src/db, ../middleware/requireAdminSession, ../src/uuid, ../src/stimuliUploadS3
  * Related: docs/api/endpoints.md
  */
 
@@ -9,6 +9,10 @@ const express = require('express');
 const db = require('../src/db');
 const { requireAdminSession } = require('../middleware/requireAdminSession');
 const { isUuid } = require('../src/uuid');
+const {
+  isStimuliUploadConfigured,
+  createPresignedStimulusUpload,
+} = require('../src/stimuliUploadS3');
 
 const router = express.Router();
 
@@ -30,6 +34,37 @@ router.get('/stimuli', requireAdminSession, async (req, res) => {
     return res.status(500).json({
       success: false,
       error: 'failed to list stimuli',
+    });
+  }
+});
+
+/**
+ * POST /stimuli/upload/presign — Presigned S3 PUT for a media file; use returned publicUrl as storage_key.
+ */
+router.post('/stimuli/upload/presign', requireAdminSession, async (req, res) => {
+  if (!isStimuliUploadConfigured()) {
+    return res.status(503).json({
+      success: false,
+      error:
+        'Stimulus file upload is not configured. Set AWS_S3_BUCKET and AWS_REGION on the server (see docs/deployment/aws-deployment.md).',
+    });
+  }
+
+  const { filename, contentType } = req.body ?? {};
+  try {
+    const data = await createPresignedStimulusUpload({ filename, contentType });
+    return res.status(200).json({ success: true, data });
+  } catch (err) {
+    if (err.code === 'VALIDATION') {
+      return res.status(400).json({ success: false, error: err.message });
+    }
+    if (err.code === 'S3_NOT_CONFIGURED') {
+      return res.status(503).json({ success: false, error: err.message });
+    }
+    console.error('presign stimulus upload', err);
+    return res.status(500).json({
+      success: false,
+      error: 'failed to prepare upload',
     });
   }
 });

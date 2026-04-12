@@ -531,6 +531,23 @@
   width: 100%;
 }
 
+.admin-stimuli-page .admin-page-lead--tight {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.admin-stimuli-page .field-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+  line-height: 1.45;
+}
+
+.admin-stimuli-page .admin-upload-result-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8125rem;
+}
+
 .admin-analytics-page .admin-page-lead {
   max-width: none;
   width: 100%;

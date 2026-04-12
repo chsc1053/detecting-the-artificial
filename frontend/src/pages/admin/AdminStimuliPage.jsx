@@ -1,6 +1,6 @@
 /**
  * File: pages/admin/AdminStimuliPage.jsx
- * Purpose: Global stimuli library — create and browse stimuli per modality (text, image, video, audio).
+ * Purpose: Global stimuli library — create and browse stimuli per modality (text, image, video, audio) and upload media to S3 for URLs.
  * Dependencies: react
  */
 
@@ -26,6 +26,7 @@ const MODALITY_TABS = [
   { id: 'image', label: 'Image' },
   { id: 'video', label: 'Video' },
   { id: 'audio', label: 'Audio' },
+  { id: 'upload', label: 'Stimuli upload' },
 ]
 
 export function AdminStimuliPage() {
@@ -34,8 +35,11 @@ export function AdminStimuliPage() {
   const [load, setLoad] = useState('idle')
   const [flash, setFlash] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+  const [uploadFile, setUploadFile] = useState(null)
+  const [uploadResultUrl, setUploadResultUrl] = useState('')
   const flashDismissRef = useRef(null)
   const flashBannerRef = useRef(null)
+  const uploadInputRef = useRef(null)
 
   const [forms, setForms] = useState({
     text: { source_type: 'human', text_content: '' },
@@ -87,10 +91,83 @@ export function AdminStimuliPage() {
     return () => cancelAnimationFrame(id)
   }, [flash])
 
-  const filteredStimuli = useMemo(
-    () => stimuli.filter((s) => s.modality === activeTab),
-    [stimuli, activeTab]
-  )
+  const filteredStimuli = useMemo(() => {
+    if (activeTab === 'upload') return []
+    return stimuli.filter((s) => s.modality === activeTab)
+  }, [stimuli, activeTab])
+
+  async function handleStimuliUpload(e) {
+    e.preventDefault()
+    if (!uploadFile) {
+      setFlash({ kind: 'error', text: 'Choose an image, video, or audio file first.' })
+      return
+    }
+    setFlash({ kind: 'loading', text: 'Preparing upload…' })
+    setUploadResultUrl('')
+    try {
+      const presignRes = await fetch('/api/admin/stimuli/upload/presign', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+        },
+        body: JSON.stringify({
+          filename: uploadFile.name,
+          contentType: uploadFile.type || null,
+        }),
+      })
+      const presignPayload = await presignRes.json()
+      if (!presignRes.ok || !presignPayload?.success) {
+        setFlash({
+          kind: presignRes.status === 503 ? 'warning' : 'error',
+          text:
+            presignPayload?.error ||
+            (presignRes.status === 503
+              ? 'File upload is not configured on the server.'
+              : 'Could not prepare upload.'),
+        })
+        return
+      }
+      const { uploadUrl, publicUrl, contentType } = presignPayload.data
+      setFlash({ kind: 'loading', text: 'Uploading file…' })
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: uploadFile,
+      })
+      if (!putRes.ok) {
+        setFlash({
+          kind: 'error',
+          text: `Upload to storage failed (${putRes.status}). Try again or check server and bucket settings.`,
+        })
+        return
+      }
+      setUploadResultUrl(publicUrl)
+      setFlash({
+        kind: 'success',
+        text: 'File uploaded. Copy the URL below into the Media URL field when you add an image, video, or audio stimulus.',
+      })
+      setUploadFile(null)
+      if (uploadInputRef.current) uploadInputRef.current.value = ''
+    } catch {
+      setFlash({
+        kind: 'error',
+        text: 'Could not reach the server or storage.',
+      })
+    }
+  }
+
+  async function copyUploadUrl() {
+    if (!uploadResultUrl) return
+    try {
+      await navigator.clipboard.writeText(uploadResultUrl)
+      setFlash({ kind: 'success', text: 'URL copied to clipboard.' })
+    } catch {
+      setFlash({ kind: 'warning', text: 'Could not copy automatically; select the URL and copy it.' })
+    }
+  }
 
   function updateForm(modality, patch) {
     setForms((prev) => ({ ...prev, [modality]: { ...prev[modality], ...patch } }))
@@ -228,11 +305,13 @@ export function AdminStimuliPage() {
         </div>
       )}
 
-      <div className="study-tabs" role="tablist" aria-label="Stimulus modalities">
+      <div className="study-tabs" role="tablist" aria-label="Stimuli library">
         {MODALITY_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
             className={`study-tab ${activeTab === tab.id ? 'study-tab--active' : ''}`}
             onClick={() => setActiveTab(tab.id)}
           >
@@ -242,6 +321,73 @@ export function AdminStimuliPage() {
       </div>
 
       <div className="study-tab-panel">
+        {activeTab === 'upload' ? (
+          <>
+            <section className="admin-section">
+              <h2 className="admin-section-title">Upload media to AWS storage</h2>
+              <p className="admin-page-lead admin-page-lead--tight">
+                Upload an image, video, or audio file. When it finishes, copy the public URL and paste it into the{' '}
+                <strong>Media URL</strong> field on the Image, Video, or Audio tab when you create a stimulus.
+              </p>
+              <div className="admin-panel-card">
+                <form className="form-stack" onSubmit={handleStimuliUpload}>
+                  <div className="field">
+                    <label htmlFor="stim-upload-file">Media file</label>
+                    <input
+                      ref={uploadInputRef}
+                      id="stim-upload-file"
+                      type="file"
+                      accept="image/*,video/*,audio/*"
+                      onChange={(ev) => {
+                        setUploadFile(ev.target.files?.[0] ?? null)
+                        setUploadResultUrl('')
+                      }}
+                    />
+                    <p className="field-hint">
+                      Common formats: JPEG, JPG, PNG, MP4, MOV, MP3.
+                    </p>
+                  </div>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={flash?.kind === 'loading' || !uploadFile}
+                  >
+                    Upload and get URL
+                  </button>
+                </form>
+              </div>
+            </section>
+
+            {uploadResultUrl ? (
+              <section className="admin-section">
+                <h2 className="admin-section-title">Public URL for this file</h2>
+                <div className="admin-panel-card">
+                  <div className="field">
+                    <label htmlFor="stim-upload-result-url">Media URL (paste into stimulus form)</label>
+                    <input
+                      id="stim-upload-result-url"
+                      type="url"
+                      readOnly
+                      value={uploadResultUrl}
+                      className="admin-upload-result-input"
+                    />
+                  </div>
+                  <button type="button" className="btn btn-secondary" onClick={copyUploadUrl}>
+                    Copy URL
+                  </button>
+                </div>
+              </section>
+            ) : null}
+
+            <section className="admin-section">
+              <h2 className="admin-section-title">Browse stimuli by modality</h2>
+              <p className="dashboard-stat-muted">
+                The library lists are on the Text, Image, Video, and Audio tabs above.
+              </p>
+            </section>
+          </>
+        ) : (
+          <>
         <section className="admin-section">
           <h2 className="admin-section-title">
             {activeTab === 'text' && 'Add text stimulus'}
@@ -369,6 +515,8 @@ export function AdminStimuliPage() {
             </ul>
           )}
         </section>
+          </>
+        )}
       </div>
     </div>
   )

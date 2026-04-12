@@ -396,6 +396,51 @@ Same fields as login response for this session (including `activity_since` when 
 
 ---
 
+### POST /admin/stimuli/upload/presign
+
+**Description:** Prepare a **direct browser upload** of one media file to S3. Returns a short-lived **presigned PUT URL** and the **public HTTPS URL** to store in `storage_key` when creating an image, video, or audio stimulus. Requires S3 configuration on the server (`AWS_S3_BUCKET`, `AWS_REGION`, and credentials or an EC2/Elastic Beanstalk instance profile with `s3:PutObject` on `stimuli/*`).
+
+**Authentication:** Bearer token.
+
+**Request Body:**
+
+```json
+{
+  "filename": "clip.mp4",
+  "contentType": "video/mp4"
+}
+```
+
+- `filename` — **required** (used for the S3 object suffix; path segments are stripped).
+- `contentType` — optional; if omitted or not allowed, the server infers a type from the file extension. Allowed types include common image (`image/jpeg`, `image/png`, `image/webp`, `image/gif`), video (`video/mp4`, `video/quicktime`, `video/webm`), and audio (`audio/mpeg`, `audio/wav`, `audio/x-wav`, `audio/webm`, `audio/ogg`, `audio/mp4`) MIME types.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "uploadUrl": "https://...",
+    "publicUrl": "https://...",
+    "key": "stimuli/uuid-filename.ext",
+    "contentType": "video/mp4"
+  }
+}
+```
+
+The client must **PUT** the raw file bytes to `uploadUrl` with header `Content-Type` exactly equal to `data.contentType`.
+
+**Error Responses:**
+
+- `400` — missing `filename`, or unsupported / unguessable content type
+- `401` — missing/invalid token
+- `503` — S3 not configured (`AWS_S3_BUCKET` / `AWS_REGION` missing)
+- `500` — presign failure
+
+**Related:** [AWS deployment](../deployment/aws-deployment.md) (bucket, IAM, CORS, public read).
+
+---
+
 ### POST /admin/stimuli
 
 **Description:** Create a stimulus. Text uses inline `text_content`. Image, video, and audio require a **media URL or key** in `storage_key` (participant UI treats `http`/`https` values as embeddable URLs) and a non-empty `model_name` (source / model description). `notes` is optional.
@@ -494,10 +539,6 @@ Base path: `/participant` (e.g. dev: `http://localhost:3000/participant/...`).
 **Description:** Per-trial correctness and summary analytics for a completed session (responses still present).
 
 ---
-
-## Planned Endpoints
-
-- **Stimuli**: authenticated upload to S3; issue pre-signed URLs for delivery (see [stimulus delivery](../features/stimulus-delivery.md); participant UI accepts several URL shapes today).
 
 ## Related
 
