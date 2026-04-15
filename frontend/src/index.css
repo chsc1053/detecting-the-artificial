@@ -1,0 +1,62 @@
+/**
+ * Global styles: design tokens, base typography, layout shell.
+ * Font loaded in index.html (Instrument Sans).
+ * Related: docs/architecture/frontend.md
+ */
+
+:root {
+  --font-sans: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --color-bg: #f0f2f5;
+  --color-surface: #ffffff;
+  --color-border: #e4e7ec;
+  --color-text: #101828;
+  --color-muted: #667085;
+  --color-accent: #0b5c5e;
+  --color-accent-hover: #094648;
+  --color-accent-soft: #e6f4f4;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-md: 0 4px 12px rgba(16, 24, 40, 0.08);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --max-content: 720px;
+  --max-wide: 960px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: var(--color-accent);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+}
