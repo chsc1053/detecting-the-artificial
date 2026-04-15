@@ -137,3 +137,13 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Elastic Beanstalk manual deploy bundles
+api-deploy-manual*.zip
+web-deploy-manual*.zip
+
+# Local temporary Dockerrun bundle file
+Dockerrun.aws.json
+
+# Web image build output (copy of frontend/dist for docker build)
+web/dist/

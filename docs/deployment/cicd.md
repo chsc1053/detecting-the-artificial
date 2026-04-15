@@ -1,12 +1,12 @@
 # CI/CD Pipeline
 
-No GitHub Actions workflows are checked in yet. The intended direction is as follows.
+## In the repository
 
 ## Planned Scope
 
-- GitHub Actions: lint, test, build on push/PR.
-- Deploy to AWS Elastic Beanstalk (e.g. on merge to main or tagged release).
-- No secrets in workflow logs; use GitHub secrets for AWS credentials and env vars.
+- Build on push/PR where applicable.
+- Deploy to AWS Elastic Beanstalk using OIDC to AWS.
+- No secrets in workflow logs; use GitHub secrets for the AWS role ARN and environment-specific values.
 
 ## Related
 

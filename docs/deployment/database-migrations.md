@@ -35,6 +35,17 @@ Run these from `backend/`:
 - Commit migration files to git so every environment can reproduce the same schema.
 - Never edit an already-applied migration in shared history; create a new migration for incremental changes.
 
+## RDS / Elastic Beanstalk (production)
+
+Running `npm run migrate:up` from local environment against an RDS instance that is **only reachable inside the VPC** will fail (`ENETUNREACH` to the private IP). Typical options:
+
+1. **Temporary access:** allow your IP on the RDS security group for port `5432`, and (if needed) set RDS **Public access** to **Yes** only long enough to migrate, then remove the rule and set Public access back to **No**.
+2. **Run migrations from a host inside the VPC** (e.g. a bastion, or a one-off CI job with a secret `DATABASE_URL`).
+
+RDS often requires TLS. If you see certificate errors when connecting with `node`/`pg`, add query parameters to `DATABASE_URL`, for example `?sslmode=no-verify` for a short-lived lab deploy, or stricter modes for production per your security requirements.
+
+After migrations, the API EB environment should use the **same** `DATABASE_URL` (including SSL parameters) in Elastic Beanstalk **environment properties**.
+
 ## Related
 
 - [Local setup](local-setup.md) — seeding an admin user (bcrypt hash via **heredoc**).

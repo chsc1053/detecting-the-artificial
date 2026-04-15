@@ -95,6 +95,15 @@ Never commit `.env` or real secrets; use `.env.example` as a template.
 
 **Dev proxy:** In development, requests from the frontend to `/api/*` are proxied to the backend (see `frontend/vite.config.js`). For example, `fetch('/api/participant/active-studies')` is forwarded to the backend. Run the backend while developing the frontend so participant and admin API calls succeed.
 
+The Vite proxy **strips** the `/api` prefix when forwarding to the API (same paths as the Express app: `/studies`, `/participant`, …). In production on AWS, the **web** container’s nginx does the same so browser code can keep using `/api/...` URLs.
+
+## Docker (optional, mirrors AWS)
+
+For a local smoke test of the same layout as Elastic Beanstalk:
+
+1. **API:** from repo root, `docker build -t dta-api:local -f backend/Dockerfile backend` then run with `DATABASE_URL`, `AWS_REGION`, `AWS_S3_BUCKET`, etc. If port `3000` is busy, map another host port, e.g. `-p 3001:3000`.
+2. **Web:** `cd frontend && npm ci && npm run build && cd ..` then `rm -rf web/dist && cp -R frontend/dist web/dist`, then `docker build -t dta-web:local -f web/Dockerfile web`. Run with `-e API_UPSTREAM=http://host.docker.internal:3001` (or the host port you chose) so nginx can proxy `/api/` to the API.
+
 ## Related
 
 - [AWS deployment](aws-deployment.md)

@@ -20,16 +20,6 @@ The **database (RDS PostgreSQL)** and **hosting the app (e.g. Elastic Beanstalk)
 1. Open the AWS console in a desktop browser: [https://console.aws.amazon.com/](https://console.aws.amazon.com/).
 2. Complete **Phase 1 → Phase 6** in order.
 
-### Worksheet (copy and fill in)
-
-
-| Item                                              | Your value | Example                         |
-| ------------------------------------------------- | ---------- | ------------------------------- |
-| **Region** (pick one and stick to it)             |            | `us-east-1`                     |
-| **S3 bucket name** (globally unique)              |            | `my-lab-detecting-media`        |
-| **Admin site URL** (exact origin, no path)        |            | `https://app.example.com`       |
-| **Local dev URL** (if testing upload locally)     |            | `http://localhost:5173`         |
-
 
 **Region:** In the AWS console, the region is shown in the **top right** (next to your account name). Click it to change region. **Create the S3 bucket in the same region** you intend to use for your app servers so latency and configuration stay simple.
 
@@ -46,7 +36,7 @@ The **database (RDS PostgreSQL)** and **hosting the app (e.g. Elastic Beanstalk)
 1. Sign in to [https://console.aws.amazon.com/](https://console.aws.amazon.com/).
 2. In the **top right**, open the **region** dropdown.
 3. Choose a region (for example **US East (N. Virginia)** — code `us-east-1`).
-4. Write the **region code** (e.g. `us-east-1`) on your worksheet. **Stay in this region** for S3 and for creating IAM policies unless your organization mandates otherwise.
+4. **Stay in this region** for S3 and for creating IAM policies unless your organization mandates otherwise.
 
 ---
 
@@ -55,7 +45,7 @@ The **database (RDS PostgreSQL)** and **hosting the app (e.g. Elastic Beanstalk)
 ### Step 1.1 — Open S3
 
 1. In the top search bar, type **S3** and open **S3** (object storage).
-2. Confirm the region in the top right still matches your worksheet.
+2. Confirm the region in the top right still matches.
 
 ### Step 1.2 — Start bucket creation
 
@@ -63,7 +53,7 @@ The **database (RDS PostgreSQL)** and **hosting the app (e.g. Elastic Beanstalk)
 
 ### Step 1.3 — General configuration
 
-1. **Bucket name:** Enter a name that is **globally unique** across all of AWS (lowercase letters, numbers, hyphens are safe). Example: `my-lab-detecting-media`. Copy it to your worksheet.
+1. **Bucket name:** Enter a name that is **globally unique** across all of AWS (lowercase letters, numbers, hyphens are safe). Example: `my-lab-detecting-media`.
 2. **AWS Region:** Should match the region you chose (e.g. N. Virginia = `us-east-1`).
 
 ### Step 1.4 — Object Ownership
@@ -141,7 +131,7 @@ This lets **participants** load media by URL (the same URL you store as **Media 
 ### Step 3.2 — Paste the policy
 
 1. Paste the JSON below.
-2. Replace `**YOUR_BUCKET_NAME`** (in `Resource`) with your **exact** bucket name from the worksheet.
+2. Replace `**YOUR_BUCKET_NAME`** (in `Resource`) with your **exact** bucket name.
 
 ```json
 {
@@ -203,7 +193,7 @@ The API must call AWS to **sign** a PUT URL. That requires `**s3:PutObject`** on
 
 ### Step 4.3 — Name and create the policy
 
-1. **Policy name:** e.g. `DetectingArtificialStimuliPut` (match your worksheet).
+1. **Policy name:** e.g. `DetectingArtificialStimuliPut`.
 2. **Description (optional):** e.g. `Presigned PUT uploads for detecting-the-artificial stimuli`.
 3. Click **Create policy**.
 
@@ -298,10 +288,62 @@ If you do **not** use Elastic Beanstalk, attach the same role to whatever runs t
 4. **Migrations** — Run `npm run migrate:up` (or your process) against production **once** as part of deploy (documented in [database migrations](database-migrations.md)).
 5. **HTTPS** — Put the user-facing site behind **HTTPS** (load balancer / CloudFront); update CORS origins to `https://...`.
 
-This repository’s CI/CD details are still minimal; see [CI/CD](cicd.md).
-
 ---
 
+## Elastic Beanstalk — full stack (API + web + RDS)
+
+This section documents the **shape of a complete deploy** used for this project: **two** Elastic Beanstalk **Docker** environments in the **same AWS region** as S3 and RDS, **single-instance** (no Application Load Balancer), **no NAT Gateway**. Exact names vary by account; a reference layout is: application `dta`, API environment `dta-api-prod`, web environment `dta-web-prod`, region `us-east-2`.
+
+### Why two environments
+
+- **API** runs the Node server (`backend/Dockerfile`). It uses `DATABASE_URL`, S3 env vars, and (on EC2) an **instance profile** for S3 — same as Phases 1–6 above.
+- **Web** runs **nginx** (`web/Dockerfile`) serving the Vite build and **proxying** `/api/*` to the API. The frontend code calls `/api/...`; in dev, Vite rewrites `/api` to the backend (see [Local setup](local-setup.md)). In production, nginx must do the equivalent: `location /api/` proxies to `API_UPSTREAM` with a path rewrite so upstream routes stay `/studies`, `/participant`, `/admin`, … (not `/api/studies`). The `web/nginx.conf.template` uses `proxy_pass` to the API origin with that rewrite.
+
+Set **environment property** on the **web** environment only:
+
+- `API_UPSTREAM` — base URL of the API EB environment, **no trailing slash**, e.g. `http://dta-api-prod.eba-xxxx.us-east-2.elasticbeanstalk.com`.
+
+### Containers in this repo
+
+| Path | Role |
+|------|------|
+| `backend/Dockerfile` | Production API image: `npm ci --omit=dev`, `node index.js`, listens on `PORT` (use `3000` consistently with Dockerrun). |
+| `web/Dockerfile` | nginx + static files under `/usr/share/nginx/html` (from `frontend` build output copied to `web/dist` at image build time). |
+| `web/docker-entrypoint.sh` | Substitutes `API_UPSTREAM` into the nginx config at container start. |
+| `web/nginx.conf.template` | nginx site config (not committed with secrets). |
+
+### ECR and CPU architecture
+
+Push images to **ECR** repositories (e.g. `dta-api`, `dta-web`). Elastic Beanstalk **x86_64** instances pull **linux/amd64** images. Build on Apple Silicon with **`docker buildx build --platform linux/amd64`** (or equivalent) so pulls do not fail with “no matching manifest for linux/amd64”.
+
+### Elastic Beanstalk EC2 role and ECR
+
+The **EC2 instance profile** attached to each Beanstalk environment must be allowed to **pull from ECR**. If deploy logs show `ecr:GetAuthorizationToken` **AccessDenied**, attach **`AmazonEC2ContainerRegistryReadOnly`** (or equivalent) to the **`aws-elasticbeanstalk-ec2-role`** (or whichever instance profile EB uses). The **API** instance profile still needs S3 permissions for stimuli uploads.
+
+### Deploy bundles (`Dockerrun.aws.json`)
+
+Each environment deploy uses a small zip containing **`Dockerrun.aws.json`** (single-container) pointing at the ECR image tag and container port (**3000** API, **80** web). Elastic Beanstalk stores the bundle in an account **staging bucket** (commonly named like `elasticbeanstalk-<region>-<account-id>`) when creating an application version. Do not commit local zips or a stray repo-root `Dockerrun.aws.json` — see root `.gitignore`.
+
+### RDS (same VPC)
+
+- Place **RDS** in the **same VPC** as the EB instances (typical: RDS in private subnets; EB instances in **public** subnets with a public IP so they can reach **ECR** and the internet **without a NAT gateway**).
+- **Security group:** allow **PostgreSQL 5432** from the **API EB** instance security group to the **RDS** security group.
+- Set **`DATABASE_URL`** on the **API** environment only. For RDS TLS from Node, you may need query parameters on the URL (see [Database migrations](database-migrations.md)).
+
+### End-to-end checks
+
+1. **API URL:** `GET /studies` (and `/health`) should respond (not necessarily `GET /`, which may 404).
+2. **Web URL:** browser loads the SPA; `GET /api/studies` through the **web** hostname returns JSON from Express (proxied), e.g. `{"success":true,"data":[]}` after migrations.
+
+### CORS (S3 uploads)
+
+When the admin UI is served from the **web** EB URL, add that origin (scheme + host, no path) to the S3 bucket **CORS** `AllowedOrigins`.
+
+### CI/CD
+
+Automated deploy from GitHub (e.g. merge to `main`); when enabled, document triggers and secrets in [CI/CD](cicd.md). Docker assets above are what any pipeline should build and push.
+
+---
 
 ## Related
 
