@@ -341,7 +341,7 @@ When the admin UI is served from the **web** EB URL, add that origin (scheme + h
 
 ### CI/CD
 
-Automated deploy from GitHub (e.g. merge to `main`); when enabled, document triggers and secrets in [CI/CD](cicd.md). Docker assets above are what any pipeline should build and push.
+Automated deploy from GitHub on push to **`main`** is implemented in [`.github/workflows/deploy-main.yml`](../../.github/workflows/deploy-main.yml). Required secrets, variables, IAM expectations, and gaps (e.g. migrations) are listed in [CI/CD](cicd.md).
 
 ---
 
