@@ -14,6 +14,10 @@ Single **experimenter / admin** surface: authenticated, used to configure studie
 - **Side navigation** (primary, fixed on wide viewports while main content scrolls): product name + “Admin”, **signed-in email** under the brand, nav links, **Sign out** at the bottom of the sidebar. No separate top bar.
 - **Breadcrumbs** (recommended on nested pages): e.g. `Studies > [Study name] > Trials` in page content to reduce disorientation.
 
+## First-time experimenter account
+
+When the `experimenters` table has **no rows**, `/admin/login` shows a **one-time** form to create the first account (email + password). After any experimenter exists, only normal sign-in is shown. Setup and reset steps are documented in [Local setup](../deployment/local-setup.md).
+
 ## Route map (conceptual)
 
 | Path | Purpose |

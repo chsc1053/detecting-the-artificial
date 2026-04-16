@@ -68,6 +68,17 @@
   letter-spacing: -0.02em;
 }
 
+.card-title--small {
+  font-size: 1.125rem;
+}
+
+.card--nested {
+  padding: 1.25rem 1.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.02);
+}
+
 .card-subtitle {
   margin: 0 0 1.5rem;
   font-size: 0.9375rem;

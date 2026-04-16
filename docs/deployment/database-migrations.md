@@ -45,7 +45,3 @@ Running `npm run migrate:up` from local environment against an RDS instance that
 RDS often requires TLS. If you see certificate errors when connecting with `node`/`pg`, add query parameters to `DATABASE_URL`, for example `?sslmode=no-verify` for a short-lived lab deploy, or stricter modes for production per your security requirements.
 
 After migrations, the API EB environment should use the **same** `DATABASE_URL` (including SSL parameters) in Elastic Beanstalk **environment properties**.
-
-## Related
-
-- [Local setup](local-setup.md) — seeding an admin user (bcrypt hash via **heredoc**).

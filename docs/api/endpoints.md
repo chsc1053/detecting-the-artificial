@@ -57,6 +57,54 @@ Reference for HTTP routes implemented by the backend.
 
 ---
 
+### GET /admin/auth/bootstrap-status
+
+**Description:** Whether the one-time “first experimenter” bootstrap is available (no rows in `experimenters`).
+
+**Authentication:** None.
+
+**Response (200):**
+
+```json
+{
+  "success": true,
+  "data": {
+    "open": true
+  }
+}
+```
+
+- `open` — `true` only when there are zero experimenters; then `POST /admin/auth/bootstrap` is allowed.
+
+---
+
+### POST /admin/auth/bootstrap
+
+**Description:** Create the **first** experimenter account (only when `experimenters` is empty). Disabled after that. Returns a session token like login.
+
+**Authentication:** None.
+
+
+**Request Body:**
+
+```json
+{
+  "email": "researcher@example.com",
+  "password": "plaintext-password"
+}
+```
+
+**Response (201):** Same shape as `POST /admin/auth/login` (token + experimenter).
+
+**Error Responses:**
+
+- `400` — Missing email/password or password shorter than 8 characters
+- `403` — Bootstrap already completed
+- `409` — Email already exists (race)
+- `500` — Bootstrap failed
+
+---
+
 ### POST /admin/auth/login
 
 **Description:** Authenticate an experimenter/admin user and create a development session token.
