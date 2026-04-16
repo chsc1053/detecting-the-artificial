@@ -1,29 +1,54 @@
 # Detecting the Artificial
 
-A cloud-native web platform for conducting multimodal human-AI detection studies. This system enables researchers to systematically evaluate human perceptual ability to distinguish AI-generated content from human-created content across text, image, video, and audio modalities.
+Web platform for running human-vs-AI detection studies across text, image, video, and audio.
 
-## Overview
+Researchers can configure studies in an admin panel, collect participant responses, analyze results, and export data without building custom tooling for each experiment.
 
-As generative AI models become increasingly sophisticated, understanding human perceptual limits in detecting synthetic media is critical for designing trustworthy systems, informing content moderation strategies, and evaluating AI safety. This platform provides reusable infrastructure for running rigorous, reproducible evaluation studies without rebuilding bespoke tools for each experiment.
+## What the Project Includes
 
-## Key Features
+- **Participant app** for study flow and response collection
+- **Admin panel** for study configuration, trial management, stimuli upload, and analytics
+- **PostgreSQL-backed API** for studies, participants, responses, and admin/auth routes
+- **S3 media upload flow** (presigned PUT URLs) for image/video/audio stimuli
+- **One-time first-account bootstrap** on `/admin/login` when no experimenter exists
 
-- **Multimodal Support**: Present text, images, video, and audio stimuli within a unified interface
-- **Flexible Task Design**: Configure forced-choice tasks ("Which one is human-made?") and single-item detection tasks ("Is this human or AI?")
-- **Rich Data Collection**: Capture detection accuracy, confidence ratings (numeric scale), open-ended explanations, and basic demographics
-- **Research-Grade Logging**: Structured data schema for statistical analysis, modality metadata, and model provenance
-- **Cloud-Native Architecture**: Deployed with automated CI/CD, designed for scalability and reliability
-- **Experimenter Interface**: Web-based admin panel for configuring studies, uploading stimuli, and exporting anonymized response data
-- **Open Source**: Full codebase, documentation, and example configurations available for adaptation and extension
+## Tech Stack
 
-## Use Cases
+- **Frontend:** React + Vite
+- **Backend:** Node.js + Express
+- **Database:** PostgreSQL (`node-pg-migrate`)
+- **Charts/analytics UI:** Recharts
+- **Deployment:** Docker images on AWS Elastic Beanstalk (separate API and web environments)
 
-* Evaluating human detection performance across state-of-the-art generative models (GPT, Claude, Gemini, FLUX, Midjourney, Sora, Veo, Eleven Labs, etc.)
-* Analyzing confidence calibration (alignment between subjective certainty and actual accuracy)
-* Identifying demographic predictors of detection vulnerability (age, education, technical literacy, AI exposure)
-* Benchmarking new AI models to understand perceptual indistinguishability
-* Supporting reproducible research as generative models continue to evolve
+## Deployment Summary
+
+This repository is deployed on AWS with:
+
+- **Two Elastic Beanstalk Docker environments**
+  - **API environment** (`backend/Dockerfile`)
+  - **Web environment** (`web/Dockerfile`, nginx serving built frontend and proxying `/api/`* to API)
+- **Amazon RDS PostgreSQL** in the same VPC
+- **Amazon ECR** for container images
+- **Amazon S3** for stimuli media storage
+- **GitHub Actions + OIDC** for CI/CD deploys on push to `main`
+
+Details:
+
+- Deployment architecture: `docs/deployment/aws-deployment.md`
+- CI/CD configuration and OIDC trust policy: `docs/deployment/cicd.md`
+- Local development setup: `docs/deployment/local-setup.md`
+- Migration workflow: `docs/deployment/database-migrations.md`
+- API endpoints: `docs/api/endpoints.md`
+
+## Quick Start (Local)
+
+1. Start PostgreSQL and set `DATABASE_URL` in `backend/.env`
+2. Run backend migrations: `cd backend && npm ci && npm run migrate:up`
+3. Start backend: `npm run dev`
+4. Start frontend: `cd ../frontend && npm ci && npm run dev`
+5. Open `http://localhost:5173/admin/login`
+  - If no experimenter exists, complete one-time setup form
 
 ## License
 
-MIT License  -  see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE).
