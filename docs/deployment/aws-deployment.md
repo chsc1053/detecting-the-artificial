@@ -220,6 +220,38 @@ Use this when the Node API runs on **EC2** or **Elastic Beanstalk**.
 2. Check the box next to that policy.
 3. Click **Next**.
 
+Minimum permission required for presigned uploads from this app:
+
+- `s3:PutObject` on `arn:aws:s3:::YOUR_BUCKET_NAME/stimuli/*`
+
+Recommended for the full stimuli lifecycle (list + read + delete from admin/API as needed):
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "StimuliObjectRW",
+      "Effect": "Allow",
+      "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"],
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME/stimuli/*"
+    },
+    {
+      "Sid": "StimuliListPrefix",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket"],
+      "Resource": "arn:aws:s3:::YOUR_BUCKET_NAME",
+      "Condition": {
+        "StringLike": { "s3:prefix": ["stimuli/*"] }
+      }
+    }
+  ]
+}
+```
+
+This permission is for the **API EC2 instance role** (Elastic Beanstalk instance profile).  
+It is separate from browser CORS rules.
+
 ### Step 5.4 — Name the role
 
 1. **Role name:** e.g. `detecting-artificial-api-role`.
@@ -271,6 +303,7 @@ If you do **not** use Elastic Beanstalk, attach the same role to whatever runs t
 | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | Message about upload **not configured**                       | `AWS_REGION` and `AWS_S3_BUCKET` set on the **server** that handles `/admin/stimuli/upload/presign`. Typo in names. Restart app after changes. |
 | Presign works, browser **PUT** fails (CORS error in devtools) | S3 **CORS** `AllowedOrigins` must include your **exact** admin origin (scheme + host + port). No trailing slash.                               |
+| Presign works, browser **PUT** fails with **403** but response includes `Access-Control-Allow-Origin` | CORS is already correct; check IAM permissions for the API EC2 role (`s3:PutObject` on `stimuli/*`), presigned URL expiry, signed headers (`Content-Type` mismatch), and bucket/key/region alignment. |
 | Presign works, browser **PUT** returns **403** and the PUT URL contains `x-amz-checksum` or `x-amz-sdk-checksum` | The backend must generate presigned URLs **without** automatic CRC32 query parameters (browsers do not send matching checksum headers). Use a current backend build; the API configures the S3 client with `requestChecksumCalculation: WHEN_REQUIRED`. Redeploy and try again. |
 | URL opens but **403 Access Denied**                           | **Bucket policy** missing or wrong bucket name; **Block public access** still blocking policy; object key not under `stimuli/`.                |
 | **403** on presign or server error                            | IAM role or keys missing **s3:PutObject** on `arn:aws:s3:::BUCKET/stimuli/*`. Role not attached to EC2/Beanstalk instance.                   |
@@ -338,6 +371,21 @@ Each environment deploy uses a small zip containing **`Dockerrun.aws.json`** (si
 ### CORS (S3 uploads)
 
 When the admin UI is served from the **web** EB URL, add that origin (scheme + host, no path) to the S3 bucket **CORS** `AllowedOrigins`.
+
+### Clipboard warning on HTTP admin URL
+
+On the Stimuli upload page, the message:
+
+- `Could not copy automatically; select the URL and copy it.`
+
+usually appears when the admin app is served over **HTTP** (non-secure context).  
+Browsers often block `navigator.clipboard.writeText(...)` outside **HTTPS** (except localhost).  
+This does **not** mean the upload itself failed; only the auto-copy action failed.
+
+Workarounds:
+
+1. Copy manually from the URL field.
+2. Serve the admin app over **HTTPS** (ALB/CloudFront + ACM) to restore reliable clipboard API behavior.
 
 ### CI/CD
 

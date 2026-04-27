@@ -29,11 +29,6 @@ After migrations (`npm run migrate:up`), open **`http://localhost:5173/admin/log
 ### Admin auth setup is one-time via UI
 
 The supported flow is the one-time setup form on `/admin/login` when no experimenter exists.
-
-
-
-
-
 ### Migration workflow (backend)
 
 - Create migration file: `npm run migrate:create -- migration_name`
