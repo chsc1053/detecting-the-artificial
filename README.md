@@ -1,54 +1,112 @@
 # Detecting the Artificial
 
-Web platform for running human-vs-AI detection studies across text, image, video, and audio.
+Detecting the Artificial is a full-stack research platform for running studies that measure how well people can distinguish human-created vs AI-generated content across text, image, audio, and video.
 
-Researchers can configure studies in an admin panel, collect participant responses, analyze results, and export data without building custom tooling for each experiment.
+It includes a participant-facing study experience, an admin/researcher dashboard, analytics views, and a deployable AWS stack for end-to-end operation.
 
-## What the Project Includes
+## Why this project
 
-- **Participant app** for study flow and response collection
-- **Admin panel** for study configuration, trial management, stimuli upload, and analytics
-- **PostgreSQL-backed API** for studies, participants, responses, and admin/auth routes
-- **S3 media upload flow** (presigned PUT URLs) for image/video/audio stimuli
-- **One-time first-account bootstrap** on `/admin/login` when no experimenter exists
+As generative models improve, human detection performance, confidence calibration, and demographic effects become important research questions. This project provides reusable infrastructure so those experiments can be configured and executed without rebuilding tooling each time.
 
-## Tech Stack
+## What it does
 
-- **Frontend:** React + Vite
-- **Backend:** Node.js + Express
-- **Database:** PostgreSQL (`node-pg-migrate`)
-- **Charts/analytics UI:** Recharts
-- **Deployment:** Docker images on AWS Elastic Beanstalk (separate API and web environments)
+- Create and manage studies/trials in an authenticated admin panel
+- Upload and manage multimodal stimuli (text/image/audio/video)
+- Run participant sessions and collect responses + confidence + demographics
+- Export and inspect results in analytics/admin views
+- Enforce data-integrity rules for cleaner analysis
+- Support one-time first-admin account setup on `/admin/login`
 
-## Deployment Summary
+## What I achieved
 
-This repository is deployed on AWS with:
+- Built and connected a complete frontend + backend study platform
+- Implemented admin workflows for study/trial/stimuli/response management
+- Added analytics integrity safeguards and response cleanup controls
+- Set up cloud deployment with Docker + AWS Elastic Beanstalk (API + web)
+- Integrated S3 media uploads and RDS-backed persistence
+- Added GitHub Actions deployment pipeline with AWS OIDC
+- Documented local setup, deployment, CI/CD, and migration operations
 
-- **Two Elastic Beanstalk Docker environments**
-  - **API environment** (`backend/Dockerfile`)
-  - **Web environment** (`web/Dockerfile`, nginx serving built frontend and proxying `/api/`* to API)
-- **Amazon RDS PostgreSQL** in the same VPC
-- **Amazon ECR** for container images
-- **Amazon S3** for stimuli media storage
-- **GitHub Actions + OIDC** for CI/CD deploys on push to `main`
+## Architecture at a glance
 
-Details:
+- **Frontend:** React + Vite (`frontend/`)
+- **Backend API:** Node.js + Express (`backend/`)
+- **Database:** PostgreSQL + `node-pg-migrate`
+- **Storage:** Amazon S3 (stimuli media upload + public media URLs)
+- **Deployment:** Docker images on AWS Elastic Beanstalk
+  - API environment: `backend/Dockerfile`
+  - Web environment: `web/Dockerfile` (nginx serving frontend + proxying `/api/`*)
+- **CI/CD:** GitHub Actions + AWS OIDC + ECR + EB application version updates
 
-- Deployment architecture: `docs/deployment/aws-deployment.md`
-- CI/CD configuration and OIDC trust policy: `docs/deployment/cicd.md`
-- Local development setup: `docs/deployment/local-setup.md`
-- Migration workflow: `docs/deployment/database-migrations.md`
-- API endpoints: `docs/api/endpoints.md`
+## Demo
 
-## Quick Start (Local)
+- **Live demo URL:** [http://dta-web-prod.eba-nspqwara.us-east-2.elasticbeanstalk.com](http://dta-web-prod.eba-nspqwara.us-east-2.elasticbeanstalk.com) `DECOMMISSIONED`
 
-1. Start PostgreSQL and set `DATABASE_URL` in `backend/.env`
-2. Run backend migrations: `cd backend && npm ci && npm run migrate:up`
-3. Start backend: `npm run dev`
-4. Start frontend: `cd ../frontend && npm ci && npm run dev`
-5. Open `http://localhost:5173/admin/login`
-  - If no experimenter exists, complete one-time setup form
+## Screenshots
+
+### 1) Admin dashboard
+
+![Admin Dashboard](./docs/assets/screenshots/admin-dashboard.png)
+
+### 2) Stimuli upload + library
+
+![Stimuli Upload](./docs/assets/screenshots/stimuli-upload.png)
+![Stimuli Creation](./docs/assets/screenshots/stimuli-creation.png)
+
+### 3) Study workspace (overview/trials/responses)
+
+![Study Workspace - Overview](./docs/assets/screenshots/study-workspace-overview.png)
+![Study Workspace - Trials](./docs/assets/screenshots/study-workspace-trials.png)
+![Study Workspace - Responses](./docs/assets/screenshots/study-workspace-responses.png)
+
+### 4) Participant study flow
+
+![Participant Flow - Study Home](./docs/assets/screenshots/participant-flow-study-home.png)
+![Participant Flow - Video Trial (Single Item)](./docs/assets/screenshots/participant-flow-single-item-video-trial.png)
+![Participant Flow - Image Trial (Forced Choice)](./docs/assets/screenshots/participant-flow-forced-choice-image-trial.png)
+![Participant Flow - Demographics Mandatory](./docs/assets/screenshots/participant-flow-demographics-mandatory.png)
+![Participant Flow - Demographics Optional](./docs/assets/screenshots/participant-flow-demographics-optional.png)
+![Participant Flow - Results](./docs/assets/screenshots/participant-flow-results.png)
+
+### 5) Analytics view
+
+![Analytics - Demographics](./docs/assets/screenshots/analytics-demographics.png)
+![Analytics - Performance Tab - PDF Export](./docs/assets/screenshots/analytics-performance-export.png)
+
+### 6) Cloud deployment evidence (AWS + CI/CD)
+
+![AWS S3 - Stimuli Media](./docs/assets/screenshots/aws-s3-media-bucket.png)
+![AWS RDS - PostgreSQL DB](./docs/assets/screenshots/aws-rds-db.png)
+![AWS EB - Web Environment](./docs/assets/screenshots/aws-eb-environment.png)
+![GitHub Actions - Deployment Summary](./docs/assets/screenshots/github-actions-deployment.png)
+
+## Local quick start
+
+```bash
+# 1) Backend
+cd backend
+npm ci
+# configure backend/.env with DATABASE_URL
+npm run migrate:up
+npm run dev
+
+# 2) Frontend (new terminal)
+cd ../frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:5173/admin/login`.
+
+If no experimenter exists yet, complete one-time setup in the login page.
+
+## Repository structure
+
+- `frontend/` — React app
+- `backend/` — Express API + migrations
+- `web/` — nginx web image assets for deployment
+- `docs/` — architecture, API, deployment, and feature documentation
 
 ## License
 
-MIT License - see [LICENSE](LICENSE).
+MIT — see [LICENSE](./LICENSE)
